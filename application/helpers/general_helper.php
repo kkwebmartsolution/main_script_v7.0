@@ -643,7 +643,7 @@ function getEnrollToStudentID($enroll_id = '')
 
 function version_combine()
 {
-    return md5(APP_VERSION); 
+    return md5(APP_VERSION . '_v7.1_kkedumart'); 
 }
 
 function img_reload()

@@ -176,7 +176,7 @@
 		<ul class="header-menu">
 			<!-- AI Assistant Button -->
 			<li>
-				<a href="javascript:void(0);" id="btn-ai-assistant" class="header-menu-icon" data-toggle="tooltip" data-placement="bottom" data-original-title="AI Assistant (Gemini)">
+				<a href="javascript:void(0);" id="btn-ai-assistant" class="header-menu-icon" data-toggle="tooltip" data-placement="bottom" data-original-title="KKEDUMART AI Assistant">
 					<i class="fas fa-robot text-primary" style="font-size: 19px;"></i>
 				</a>
 			</li>

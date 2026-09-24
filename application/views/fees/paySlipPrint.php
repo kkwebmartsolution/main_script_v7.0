@@ -54,6 +54,20 @@
 		visibility: hidden !important;
 		border: none !important;
 	}
+	.receipt-slot.slot-hidden,
+	.receipt-slot[style*="display: none"],
+	.receipt-slot[style*="display:none"] {
+		display: none !important;
+		visibility: hidden !important;
+		width: 0 !important;
+		max-width: 0 !important;
+		min-width: 0 !important;
+		flex: 0 0 0 !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		border: none !important;
+		overflow: hidden !important;
+	}
 	.receipt-has-two #slot_student_copy {
 		border-right: 1px dashed #999 !important;
 		padding-right: 14px !important;
@@ -95,6 +109,11 @@
 }
 .receipt-slot.empty-slot {
 	visibility: hidden;
+}
+.receipt-slot.slot-hidden,
+.receipt-slot[style*="display: none"],
+.receipt-slot[style*="display:none"] {
+	display: none !important;
 }
 .receipt-has-two #slot_student_copy {
 	border-right: 1px dashed #bbb;
@@ -149,6 +168,14 @@ $currency_symbol = $global_config['currency_symbol'];
 $basic           = $this->fees_model->getInvoiceBasic($studentID);
 
 if (!isset($copyType) || empty($copyType)) {
+	$copyType = 'both';
+}
+$copyType = strtolower(trim((string)$copyType));
+if (in_array($copyType, array('student', 'student_only', 'student_copy', 'student copy'))) {
+	$copyType = 'student';
+} elseif (in_array($copyType, array('office', 'office_only', 'office_copy', 'office copy'))) {
+	$copyType = 'office';
+} else {
 	$copyType = 'both';
 }
 
@@ -323,24 +350,24 @@ $renderCopy = function($copy_title) use ($basic, $paymentHistory, $total_paid, $
 
 <div class="receipt-page-container row <?= ($copyType == 'both' ? 'receipt-has-two' : '') ?>" id="receiptContainer">
 	<!-- Left Slot: Student Copy -->
-	<div class="col-xs-6 receipt-slot" id="slot_student_copy" style="<?= ($copyType == 'office' ? 'display: none;' : '') ?>">
+	<div class="col-xs-6 receipt-slot <?= ($copyType == 'office' ? 'slot-hidden' : '') ?>" id="slot_student_copy" style="<?= ($copyType == 'office' ? 'display: none !important;' : '') ?>">
 		<?php $renderCopy('Student Copy'); ?>
 	</div>
 
 	<!-- Right Slot: Office Copy -->
-	<div class="col-xs-6 receipt-slot" id="slot_office_copy" style="<?= ($copyType == 'student' ? 'display: none;' : '') ?>">
+	<div class="col-xs-6 receipt-slot <?= ($copyType == 'student' ? 'slot-hidden' : '') ?>" id="slot_office_copy" style="<?= ($copyType == 'student' ? 'display: none !important;' : '') ?>">
 		<?php $renderCopy('Office Copy'); ?>
 	</div>
 
 	<!-- Empty Blank Spacer Slot: Ensures the single copy stays exactly 50% width and never takes full page -->
-	<div class="col-xs-6 receipt-slot empty-slot" id="slot_empty" style="<?= ($copyType == 'both' ? 'display: none;' : '') ?>">
+	<div class="col-xs-6 receipt-slot empty-slot <?= ($copyType == 'both' ? 'slot-hidden' : '') ?>" id="slot_empty" style="<?= ($copyType == 'both' ? 'display: none !important;' : '') ?>">
 		&nbsp;
 	</div>
 </div>
 
 <script type="text/javascript">
 function autoFitReceipt() {
-	var cards = document.querySelectorAll('.receipt-slot:not(.empty-slot) .invoice');
+	var cards = document.querySelectorAll('.receipt-slot:not(.empty-slot):not(.slot-hidden) .invoice');
 	if (!cards || cards.length === 0) return;
 
 	// Target height to match full A4 landscape page height (~725px)
@@ -409,21 +436,36 @@ function toggleReceiptCopy(type) {
 
 	if (type === 'both') {
 		if (btnBoth) btnBoth.className = 'btn btn-default active btn-primary';
-		slotStudent.style.display = 'block';
-		slotOffice.style.display = 'block';
-		if (slotEmpty) slotEmpty.style.display = 'none';
+		slotStudent.style.setProperty('display', 'block', 'important');
+		slotStudent.classList.remove('slot-hidden');
+		slotOffice.style.setProperty('display', 'block', 'important');
+		slotOffice.classList.remove('slot-hidden');
+		if (slotEmpty) {
+			slotEmpty.style.setProperty('display', 'none', 'important');
+			slotEmpty.classList.add('slot-hidden');
+		}
 		container.className = 'receipt-page-container row receipt-has-two';
 	} else if (type === 'student') {
 		if (btnStudent) btnStudent.className = 'btn btn-default active btn-primary';
-		slotStudent.style.display = 'block';
-		slotOffice.style.display = 'none';
-		if (slotEmpty) slotEmpty.style.display = 'block';
+		slotStudent.style.setProperty('display', 'block', 'important');
+		slotStudent.classList.remove('slot-hidden');
+		slotOffice.style.setProperty('display', 'none', 'important');
+		slotOffice.classList.add('slot-hidden');
+		if (slotEmpty) {
+			slotEmpty.style.setProperty('display', 'block', 'important');
+			slotEmpty.classList.remove('slot-hidden');
+		}
 		container.className = 'receipt-page-container row';
 	} else if (type === 'office') {
 		if (btnOffice) btnOffice.className = 'btn btn-default active btn-primary';
-		slotStudent.style.display = 'none';
-		slotOffice.style.display = 'block';
-		if (slotEmpty) slotEmpty.style.display = 'block';
+		slotStudent.style.setProperty('display', 'none', 'important');
+		slotStudent.classList.add('slot-hidden');
+		slotOffice.style.setProperty('display', 'block', 'important');
+		slotOffice.classList.remove('slot-hidden');
+		if (slotEmpty) {
+			slotEmpty.style.setProperty('display', 'block', 'important');
+			slotEmpty.classList.remove('slot-hidden');
+		}
 		container.className = 'receipt-page-container row';
 	}
 

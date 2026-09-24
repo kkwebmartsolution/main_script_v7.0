@@ -1034,12 +1034,20 @@ $productlist = !empty($productlist) ? $productlist : array();
 
 		$.each(filtered, function (idx, item) {
 			var price = parseFloat(item.sales_price || 0).toFixed(2);
-			var stock = parseInt(item.available_stock || 0);
+			var stock = parseFloat(item.available_stock || 0);
+			var unitRatio = parseFloat(item.unit_ratio || 1);
+			var unitLabel = item.unit_name ? ' ' + escapeHtml(item.unit_name) : '';
+			var stockDisplay = 'Stock: ' + stock + unitLabel;
+			if (unitRatio > 1 && stock > 0) {
+				var boxQty = (stock / unitRatio);
+				boxQty = Number.isInteger(boxQty) ? boxQty : boxQty.toFixed(1);
+				stockDisplay += ' (' + boxQty + ' Box)';
+			}
 			var stockBadge = '';
 			if (stock > 5) {
-				stockBadge = '<span class="pos-card-stock" style="background:#e6f7ec; color:#16a34a;">Stock: ' + stock + '</span>';
+				stockBadge = '<span class="pos-card-stock" style="background:#e6f7ec; color:#16a34a;" title="' + stockDisplay + '">' + stockDisplay + '</span>';
 			} else if (stock > 0) {
-				stockBadge = '<span class="pos-card-stock" style="background:#fef3c7; color:#d97706;">Low: ' + stock + '</span>';
+				stockBadge = '<span class="pos-card-stock" style="background:#fef3c7; color:#d97706;" title="' + stockDisplay + '">' + stockDisplay + '</span>';
 			} else {
 				stockBadge = '<span class="pos-card-stock" style="background:#fee2e2; color:#dc2626;">Out of Stock</span>';
 			}

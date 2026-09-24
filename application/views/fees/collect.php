@@ -1178,18 +1178,23 @@ if (moduleIsEnabled('transport')) {
 	}
 
 	$('#payReceiptPrint').on('click', function(e) {
-		executePayReceiptPrint('history', $(this).data('copy-type') || 'both', $(this));
+		var copyType = $(this).attr('data-copy-type') || $(this).data('copy-type') || $(this).data('copyType') || 'both';
+		executePayReceiptPrint('history', copyType, $(this));
 	});
 
 	$('.payReceiptPrintInv').on('click', function(e) {
-		executePayReceiptPrint('inv', $(this).data('copy-type') || 'both', $(this));
+		var copyType = $(this).attr('data-copy-type') || $(this).data('copy-type') || $(this).data('copyType') || 'both';
+		executePayReceiptPrint('inv', copyType, $(this));
 	});
 
 	$(document).on('click', '.btnReceiptPrintOption', function(e) {
 		e.preventDefault();
-		var target = $(this).data('target');
-		var copyType = $(this).data('copy-type') || 'both';
+		var target = $(this).attr('data-target') || $(this).data('target');
+		var copyType = $(this).attr('data-copy-type') || $(this).data('copy-type') || $(this).data('copyType') || 'both';
 		var $btn = target === 'history' ? $('#payReceiptPrint') : $(this).closest('.btn-group').find('.payReceiptPrintInv');
+		if ($btn && $btn.length) {
+			$btn.attr('data-copy-type', copyType);
+		}
 		executePayReceiptPrint(target, copyType, $btn);
 	});
 

@@ -28,7 +28,7 @@
                         window.location.href = base_url + "dashboard";
                     } else {
                         if (data.payment_id && data.print === true) {
-                            var copyType = $this.find("input[name='modal_receipt_copy']:checked").val() || $this.find("input[name='receipt_copy']:checked").val() || 'both';
+                            var copyType = (data && data.copy_type) ? data.copy_type : ($this.find("input[name='modal_receipt_copy']:checked").val() || $("input[name='modal_receipt_copy']:checked").val() || $this.find("input[name='receipt_copy']:checked").val() || 'both');
                             $.ajax({
                                 url: base_url + "fees/payReceiptPrint",
                                 type: 'POST',

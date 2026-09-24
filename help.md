@@ -187,3 +187,35 @@
        - `invoice()`: Wrapped inside `try { ... } catch (Throwable $e) { ... }`, safe fallback for `$student_id`, and graceful redirect with alert message instead of silent dashboard drop.
      - application/controllers/Userrole.php:
        - `invoice()`: Wrapped inside try-catch with graceful fallback to student details.
+
+
+15/ Rebrand AI Assistant to KKEDUMART (Eliminated Ramom references)
+    - Problem: AI Assistant bar-bar "Ramom School Management" introduce kar raha tha aur branding Ramom dikh rahi thi. User requirement: System aur Assistant ka naam strictly KKEDUMART hona chahiye.
+    - Files Modified:
+      - application/controllers/Ai_assistant.php: System prompt instruction ko rewrite kiya with strict instructions: "You are an intelligent AI Database Assistant for KKEDUMART School Management System... NEVER mention or say 'Ramom' or 'Ramom School Management System' under any circumstance."
+      - application/views/layout/ai_assistant.php: Drawer header title ko KKEDUMART AI Assistant aur initial welcome greeting ko KKEDUMART AI Assistant se update kiya.
+      - application/views/layout/topbar.php: Header robot icon tooltip title ko KKEDUMART AI Assistant set kiya.
+
+16/ Fix Fees Receipt Printing Double Copy (Student + Office) on Server When Selecting Student Copy
+    - Problem: Localhost par single copy (Student Copy Only) perfectly print ho rahi thi, lekin Server par student copy select karne ke baad bhi double copies (Student aur Office copy dono) print ho rahi thi.
+    - Root Causes:
+      1. Live server browsers me app.fn.js cached tha kyunki version_combine() static version hash return kar raha tha, jiski wajah se live server par user ka browser purana cached JS use kar raha tha jisme copy_type parameter pass nahi ho raha tha.
+      2. Fees::selectedFeesPay method modal submit ke response array me copy_type return nahi karta tha, aur Fees::payReceiptPrint me GET fallback aur string variations (student_copy, student_only, etc.) ka sanitization nahi tha.
+      3. paySlipPrint.php me hidden slot par sirf inline display: none; tha bina !important aur bina print-specific hidden override ke, jisse live server print media stylesheets me hidden slot display override hokar render ho jata tha. Saath hi autoFitReceipt() hidden copy card ko bhi query selector me count kar raha tha.
+      4. collect.php me jQuery .data('copy-type') hyphenated attribute cache issue ki wajah se undefined ho jata tha aur fallback 'both' select ho jata tha.
+    - Fixes Applied:
+      - application/controllers/Fees.php:
+        - payReceiptPrint(): Added robust support for POST & GET, copy_type parameter alias checking, and strict lowercase array matching (student, student_only, student_copy => student).
+        - selectedFeesPay(): Added copy_type in the returned JSON response array.
+      - application/views/fees/paySlipPrint.php:
+        - Added $copyType normalization at top of script.
+        - Added .slot-hidden and [style*="display: none"] rules in @media print with display: none !important; width: 0 !important; visibility: hidden !important; overflow: hidden !important;.
+        - Applied slot-hidden class and display: none !important; to unselected slot on load.
+        - Updated toggleReceiptCopy() with style.setProperty('display', ..., 'important') and class toggling.
+        - Updated autoFitReceipt() selector to .receipt-slot:not(.empty-slot):not(.slot-hidden) .invoice.
+      - application/views/fees/collect.php:
+        - Replaced .data('copy-type') with $(this).attr('data-copy-type') || $(this).data('copy-type') || 'both', and synchronized the button state attribute.
+      - assets/js/app.fn.js:
+        - Handled copyType directly from server response data.copy_type as primary source with robust fallback.
+      - application/helpers/general_helper.php:
+        - Bumped asset cache version in version_combine() to force all browsers on live server to immediately reload updated JS without caching issues.

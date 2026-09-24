@@ -43,6 +43,7 @@ class Inventory extends Admin_Controller
         $this->form_validation->set_rules('unit_ratio', translate('unit_ratio'), 'trim|numeric');
         $this->form_validation->set_rules('purchase_price', translate('purchase_price'), 'trim|required|numeric');
         $this->form_validation->set_rules('sales_price', translate('sales_price'), 'trim|required|numeric');
+        $this->form_validation->set_rules('available_stock', translate('available_stock'), 'trim|numeric');
     }
 
     // add new product
@@ -1036,7 +1037,7 @@ if (is_superadmin_loggedin()) {
     public function getSaleprice()
     {
         $id = $this->input->post('id');
-        $price = $this->db->select('IFNULL(sales_price,0) as salesprice,available_stock,sales_unit_id')->where('id', $id)->get('product')->row_array();
+        $price = $this->db->select('IFNULL(sales_price,0) as salesprice,available_stock,sales_unit_id,purchase_unit_id,unit_ratio')->where('id', $id)->get('product')->row_array();
         $unit_name = '-';
         if (!empty($price['sales_unit_id'])) {
             $unit = $this->db->select('name')->where('id', $price['sales_unit_id'])->get('product_unit')->row();
@@ -1044,7 +1045,14 @@ if (is_superadmin_loggedin()) {
                 $unit_name = $unit->name;
             }
         }
-        echo json_encode(['price' => $price['salesprice'], 'unit' => $unit_name, 'availablestock' => translate('available_stock_quantity') . " : " . $price['available_stock']]);
+        $availText = translate('available_stock_quantity') . " : " . $price['available_stock'];
+        if (!empty($price['unit_ratio']) && $price['unit_ratio'] > 1 && $price['available_stock'] > 0) {
+            $p_unit = !empty($price['purchase_unit_id']) ? $this->db->select('name')->where('id', $price['purchase_unit_id'])->get('product_unit')->row() : null;
+            $boxes = round($price['available_stock'] / $price['unit_ratio'], 2);
+            $p_name = $p_unit ? $p_unit->name : 'Box';
+            $availText .= " " . $unit_name . " (" . $boxes . " " . $p_name . ")";
+        }
+        echo json_encode(['price' => $price['salesprice'], 'unit' => $unit_name, 'availablestock' => $availText]);
     }
 
     public function saleItems()

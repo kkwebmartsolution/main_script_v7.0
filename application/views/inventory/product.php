@@ -28,6 +28,7 @@
 							<th><?php echo translate('unit_ratio'); ?></th>
 							<th><?php echo translate('purchase_price'); ?></th>
 							<th><?php echo translate('sales_price'); ?></th>
+							<th><?php echo translate('available_stock'); ?></th>
 							<th><?php echo translate('remarks'); ?></th>
 							<th><?php echo translate('action'); ?></th>
 						</tr>
@@ -51,6 +52,22 @@
 							<td><?php echo html_escape($row['unit_ratio']); ?></td>
 							<td><?php echo html_escape(currencyFormat($row['purchase_price'])); ?></td>
 							<td><?php echo html_escape(currencyFormat($row['sales_price'])); ?></td>
+							<td>
+								<?php 
+								$stock = floatval($row['available_stock']);
+								if ($stock <= 0) {
+									echo '<span class="label label-danger-custom">0</span>';
+								} elseif ($stock <= 5) {
+									echo '<span class="label label-warning-custom">' . $stock . '</span>';
+								} else {
+									echo '<span class="label label-success-custom">' . $stock . '</span>';
+								}
+								if (!empty($row['unit_ratio']) && $row['unit_ratio'] > 1 && $stock > 0) {
+									$boxes = round($stock / $row['unit_ratio'], 1);
+									echo ' <small class="text-muted">(' . $boxes . ' ' . (!empty($row['p_unit_name']) ? $row['p_unit_name'] : 'Box') . ')</small>';
+								}
+								?>
+							</td>
 							<td><?php echo html_escape($row['remarks']); ?></td>
 							<td class="min-w-xs">
 								<?php if (get_permission('product', 'is_edit')): ?>
@@ -146,6 +163,14 @@
 						<label class="col-md-3 control-label"><?php echo translate('sales_price'); ?> <span class="required">*</span></label>
 						<div class="col-md-6">
 							<input type="text" class="form-control" name="sales_price" id="sales_price" value="" autocomplete="off" />
+							<span class="error"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label"><?php echo translate('available_stock'); ?> / Opening Stock</label>
+						<div class="col-md-6">
+							<input type="number" step="any" class="form-control" name="available_stock" id="available_stock" value="0" autocomplete="off" placeholder="e.g. 50 (In Sales Unit / Pieces)" />
+							<span class="help-block" style="font-size:11.5px; color:#777;">Stock will be immediately available in POS / Sales. Enter stock in Sales Unit (e.g. Pieces).</span>
 							<span class="error"></span>
 						</div>
 					</div>

@@ -1462,17 +1462,37 @@ class Fees extends Admin_Controller
 
     public function payReceiptPrint()
     {
-        if ($_POST) {
+        if ($_POST || $_GET) {
             if (!get_permission('collect_fees', 'is_add')) {
                 ajax_access_denied();
             }
             $studentID = $this->input->post('student_id');
+            if (empty($studentID)) {
+                $studentID = $this->input->get('student_id');
+            }
             $record = $this->input->post('data');
+            if (empty($record)) {
+                $record = $this->input->get('data');
+            }
             $copyType = $this->input->post('copy_type');
+            if (empty($copyType)) {
+                $copyType = $this->input->get('copy_type');
+            }
+            if (empty($copyType)) {
+                $copyType = $this->input->post('modal_receipt_copy');
+            }
             if (empty($copyType)) {
                 $copyType = $this->input->post('receipt_copy');
             }
             if (empty($copyType)) {
+                $copyType = $this->input->get('receipt_copy');
+            }
+            $copyType = strtolower(trim((string)$copyType));
+            if (in_array($copyType, array('student', 'student_only', 'student_copy', 'student copy'))) {
+                $copyType = 'student';
+            } elseif (in_array($copyType, array('office', 'office_only', 'office_copy', 'office copy'))) {
+                $copyType = 'office';
+            } else {
                 $copyType = 'both';
             }
             $this->data['studentID'] = $studentID;
@@ -1611,9 +1631,20 @@ class Fees extends Admin_Controller
 
             set_alert('success', translate('information_has_been_saved_successfully'));
             $print_now = $this->input->post('print_now');
+            $copy_type = $this->input->post('modal_receipt_copy');
+            if (empty($copy_type)) {
+                $copy_type = $this->input->post('receipt_copy');
+            }
+            if (empty($copy_type)) {
+                $copy_type = $this->input->post('copy_type');
+            }
+            if (empty($copy_type)) {
+                $copy_type = 'both';
+            }
             $array = array(
                 'status' => 'success',
-                'student_id' => $studentID
+                'student_id' => $studentID,
+                'copy_type' => $copy_type
             );
             if (!empty($print_now)) {
                 $array['payment_id'] = json_encode($payment_history_ids);

@@ -88,6 +88,14 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-3 control-label"><?php echo translate('available_stock'); ?></label>
+						<div class="col-md-6">
+							<input type="number" step="any" class="form-control" name="available_stock" id="available_stock" value="<?php echo html_escape(isset($product['available_stock']) ? $product['available_stock'] : '0'); ?>" autocomplete="off" />
+							<span class="help-block" style="font-size:11.5px; color:#777;">Current stock in Sales Unit (e.g. Pieces). Directly reflected in POS / Sales.</span>
+							<span class="error"></span>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-3 control-label"><?php echo translate('remarks'); ?></label>
 						<div class="col-md-6 mb-lg">
 							<input type="text" class="form-control" name="remarks" id="remarks" value="<?php echo html_escape($product['remarks']); ?>" />

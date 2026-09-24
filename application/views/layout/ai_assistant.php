@@ -3,7 +3,7 @@
     <div class="ai-drawer-header">
         <div class="ai-drawer-title">
             <i class="fas fa-robot text-primary"></i>
-            <span>Gemini AI Assistant</span>
+            <span>KKEDUMART AI Assistant</span>
             <span class="badge badge-primary" style="font-size:10px; margin-left:6px; background:#2563eb;">DB Integrated</span>
         </div>
         <div class="ai-drawer-actions">
@@ -20,7 +20,7 @@
         <div class="ai-msg ai-msg-system">
             <div class="ai-avatar"><i class="fas fa-robot"></i></div>
             <div class="ai-bubble">
-                Hello! I am your Database-Integrated AI Assistant powered by Google Gemini. 🤖<br><br>
+                Hello! I am your KKEDUMART AI Assistant powered by Google Gemini. 🤖<br><br>
                 You can ask me to perform data entry (e.g. <b>"Add a new student John Doe in class 1"</b>, <b>"Add expense 500 for electricity bill"</b>, <b>"Add fee type Sports Fee"</b>) or ask queries about your school database!
             </div>
         </div>

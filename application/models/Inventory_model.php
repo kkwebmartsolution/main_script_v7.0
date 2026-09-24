@@ -23,6 +23,9 @@ class Inventory_model extends MY_Model
             'remarks' => empty($data['remarks']) ? '' : $data['remarks'],
             'branch_id' => $branch_id,
         );
+        if (isset($data['available_stock'])) {
+            $insert_product['available_stock'] = !is_numeric($data['available_stock']) ? 0 : $data['available_stock'];
+        }
         if (isset($data['product_id']) && !empty($data['product_id'])) {
             $this->db->where('id', $data['product_id']);
             $this->db->update('product', $insert_product);
