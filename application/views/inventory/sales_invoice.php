@@ -6,6 +6,25 @@ $currency = $global_config['currency'];
 $currency_symbol = $global_config['currency_symbol'];
 $due_amount = number_format($billdata['due'], 2, '.', '');
 $active_tab = $this->session->flashdata('active_tab');
+
+$branchLogo = $this->application_model->getBranchImage($billdata['branch_id'], 'printing-logo');
+if (empty($branchLogo)) {
+	$branchLogo = base_url('uploads/app_image/printing-logo.png');
+}
+$school_name = !empty($billdata['school_name']) ? $billdata['school_name'] : (!empty($billdata['branch_name']) ? $billdata['branch_name'] : $global_config['institute_name']);
+$school_address = !empty($billdata['school_address']) ? $billdata['school_address'] : $global_config['address'];
+$school_mobileno = !empty($billdata['school_mobileno']) ? $billdata['school_mobileno'] : $global_config['mobileno'];
+$school_email = !empty($billdata['school_email']) ? $billdata['school_email'] : $global_config['institute_email'];
+
+if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
+	$getBranch = $this->db->where('id', $billdata['branch_id'])->get('branch')->row_array();
+	if (!empty($getBranch)) {
+		$school_name = !empty($getBranch['school_name']) ? $getBranch['school_name'] : (!empty($getBranch['name']) ? $getBranch['name'] : $school_name);
+		$school_address = !empty($getBranch['address']) ? $getBranch['address'] : $school_address;
+		$school_mobileno = !empty($getBranch['mobileno']) ? $getBranch['mobileno'] : $school_mobileno;
+		$school_email = !empty($getBranch['email']) ? $getBranch['email'] : $school_email;
+	}
+}
 ?>
 <section class="panel">
 	<div class="tabs-custom">
@@ -31,7 +50,7 @@ $active_tab = $this->session->flashdata('active_tab');
 							<div class="row">
 								<div class="col-xs-6">
 									<div class="ib">
-										<img src="<?php echo base_url('uploads/app_image/printing-logo.png'); ?>" alt="Img" />
+										<img src="<?php echo $branchLogo; ?>" alt="Img" />
 									</div>
 								</div>
 								<div class="col-xs-6 text-right">
@@ -87,10 +106,14 @@ $active_tab = $this->session->flashdata('active_tab');
 										<p class="h5 mb-xs text-dark text-weight-semibold">From :</p>
 										<address>
 											<?php 
-											echo $global_config['institute_name'] . "<br/>";
-											echo $global_config['address'] . "<br/>";
-											echo $global_config['mobileno'] . "<br/>";
-											echo $global_config['institute_email'] . "<br/>";
+											echo '<strong>' . html_escape($school_name) . "</strong><br/>";
+											echo html_escape($school_address) . "<br/>";
+											if (!empty($school_mobileno)) {
+												echo translate('mobile_no') . " : " . html_escape($school_mobileno) . "<br/>";
+											}
+											if (!empty($school_email)) {
+												echo translate('email') . " : " . html_escape($school_email) . "<br/>";
+											}
 											?>
 										</address>
 									</div>
@@ -186,7 +209,7 @@ $active_tab = $this->session->flashdata('active_tab');
 							<div class="row">
 								<div class="col-xs-6">
 									<div class="ib">
-										<img src="<?php echo base_url('uploads/app_image/printing-logo.png'); ?>" alt="Img" />
+										<img src="<?php echo $branchLogo; ?>" alt="Img" />
 									</div>
 								</div>
 								<div class="col-md-6 text-right">
@@ -242,10 +265,14 @@ $active_tab = $this->session->flashdata('active_tab');
 										<p class="h5 mb-xs text-dark text-weight-semibold">From :</p>
 										<address>
 											<?php 
-											echo $global_config['institute_name'] . "<br/>";
-											echo $global_config['address'] . "<br/>";
-											echo $global_config['mobileno'] . "<br/>";
-											echo $global_config['institute_email'] . "<br/>";
+											echo '<strong>' . html_escape($school_name) . "</strong><br/>";
+											echo html_escape($school_address) . "<br/>";
+											if (!empty($school_mobileno)) {
+												echo translate('mobile_no') . " : " . html_escape($school_mobileno) . "<br/>";
+											}
+											if (!empty($school_email)) {
+												echo translate('email') . " : " . html_escape($school_email) . "<br/>";
+											}
 											?>
 										</address>
 									</div>

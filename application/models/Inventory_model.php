@@ -429,10 +429,11 @@ class Inventory_model extends MY_Model
 
     public function getSalesInvoice($id)
     {
-        $this->db->select('sales_bill.*,staff.name as biller_name,roles.name as role_name');
+        $this->db->select('sales_bill.*,staff.name as biller_name,roles.name as role_name,branch.school_name,branch.name as branch_name,branch.email as school_email,branch.mobileno as school_mobileno,branch.address as school_address,branch.city,branch.state');
         $this->db->from('sales_bill');
         $this->db->join('roles', 'roles.id = sales_bill.role_id', 'left');
         $this->db->join('staff', 'staff.id = sales_bill.prepared_by', 'left');
+        $this->db->join('branch', 'branch.id = sales_bill.branch_id', 'left');
         $this->db->where('sales_bill.id', $id);
         if (!is_superadmin_loggedin()) {
             $this->db->where('sales_bill.branch_id', get_loggedin_branch_id());

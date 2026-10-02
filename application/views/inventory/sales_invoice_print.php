@@ -59,6 +59,20 @@ $branchLogo = $this->application_model->getBranchImage($billdata['branch_id'], '
 if (empty($branchLogo)) {
     $branchLogo = base_url('uploads/app_image/printing-logo.png');
 }
+$school_name = !empty($billdata['school_name']) ? $billdata['school_name'] : (!empty($billdata['branch_name']) ? $billdata['branch_name'] : $global_config['institute_name']);
+$school_address = !empty($billdata['school_address']) ? $billdata['school_address'] : $global_config['address'];
+$school_mobileno = !empty($billdata['school_mobileno']) ? $billdata['school_mobileno'] : $global_config['mobileno'];
+$school_email = !empty($billdata['school_email']) ? $billdata['school_email'] : $global_config['institute_email'];
+
+if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
+	$getBranch = $this->db->where('id', $billdata['branch_id'])->get('branch')->row_array();
+	if (!empty($getBranch)) {
+		$school_name = !empty($getBranch['school_name']) ? $getBranch['school_name'] : (!empty($getBranch['name']) ? $getBranch['name'] : $school_name);
+		$school_address = !empty($getBranch['address']) ? $getBranch['address'] : $school_address;
+		$school_mobileno = !empty($getBranch['mobileno']) ? $getBranch['mobileno'] : $school_mobileno;
+		$school_email = !empty($getBranch['email']) ? $getBranch['email'] : $school_email;
+	}
+}
 ?>
 <div class="invoice">
 	<header class="clearfix">
@@ -129,13 +143,13 @@ if (empty($branchLogo)) {
 					<p class="h5 mb-xs text-dark text-weight-semibold" style="font-weight:700; margin-bottom:4px;">From :</p>
 					<address style="line-height:1.6;">
 						<?php 
-						echo '<strong>' . html_escape($global_config['institute_name']) . "</strong><br/>";
-						echo html_escape($global_config['address']) . "<br/>";
-						if (!empty($global_config['mobileno'])) {
-							echo translate('mobile_no') . " : " . html_escape($global_config['mobileno']) . "<br/>";
+						echo '<strong>' . html_escape($school_name) . "</strong><br/>";
+						echo html_escape($school_address) . "<br/>";
+						if (!empty($school_mobileno)) {
+							echo translate('mobile_no') . " : " . html_escape($school_mobileno) . "<br/>";
 						}
-						if (!empty($global_config['institute_email'])) {
-							echo translate('email') . " : " . html_escape($global_config['institute_email']) . "<br/>";
+						if (!empty($school_email)) {
+							echo translate('email') . " : " . html_escape($school_email) . "<br/>";
 						}
 						?>
 					</address>

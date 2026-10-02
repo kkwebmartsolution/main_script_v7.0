@@ -1,0 +1,4 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+ERROR - 2026-10-01 10:20:59 --> Query error: Unknown column 'address' in 'field list' - Invalid query: INSERT INTO `student` (`register_no`, `first_name`, `last_name`, `gender`, `blood_group`, `birthday`, `email`, `mobileno`, `address`, `branch_id`, `active`, `created_at`) VALUES ('', 'Amit', 'Sharma', 'male', '', '2026-10-01', '', '', '', 1, 1, '2026-10-01 10:20:59')
+ERROR - 2026-10-01 10:20:59 --> Query error: Cannot add or update a child row: a foreign key constraint fails (`sss_ramom`.`enroll`, CONSTRAINT `enroll_rms_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`) ON DELETE CASCADE) - Invalid query: INSERT INTO `enroll` (`student_id`, `class_id`, `section_id`, `session_id`, `branch_id`, `roll`) VALUES (0, 1, 1, '5', 1, '')
