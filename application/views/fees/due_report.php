@@ -25,11 +25,12 @@ $currency_symbol = $global_config['currency_symbol'];
 				<?php endif; ?>
 					<div class="col-md-<?php echo $widget; ?> mb-sm">
 						<div class="form-group">
-							<label class="control-label"><?=translate('class')?> <span class="required">*</span></label>
+							<label class="control-label"><?=translate('class')?></label>
 							<?php
 								$arrayClass = $this->app_lib->getClass($branch_id);
-								echo form_dropdown("class_id", $arrayClass, set_value('class_id'), "class='form-control' id='class_id' onchange='getSectionByClass(this.value,0)'
-								required data-plugin-selectTwo data-width='100%' ");
+								$arrayClass[''] = translate('all_class');
+								echo form_dropdown("class_id", $arrayClass, set_value('class_id'), "class='form-control' id='class_id' onchange='getSectionByClass(this.value,1)'
+								data-plugin-selectTwo data-width='100%' ");
 							?>
 						</div>
 					</div>
@@ -37,7 +38,7 @@ $currency_symbol = $global_config['currency_symbol'];
 						<div class="form-group">
 							<label class="control-label"><?=translate('section')?></label>
 							<?php
-								$arraySection = $this->app_lib->getSections(set_value('class_id'), false);
+								$arraySection = $this->app_lib->getSections(set_value('class_id'), true);
 								echo form_dropdown("section_id", $arraySection, set_value('section_id'), "class='form-control' id='section_id'
 								data-plugin-selectTwo data-width='100%' ");
 							?>
@@ -99,7 +100,7 @@ $currency_symbol = $global_config['currency_symbol'];
 								?>
 							<tr>
 								<td><?php echo $count++; ?></td>
-								<td><?php echo $row['first_name'] . ' ' . $row['last_name'];?></td>
+								<td><?php echo $row['first_name'] . ' ' . $row['last_name'] . (!empty($row['class_name']) ? ' (' . $row['class_name'] . (!empty($row['section_name']) ? ' - ' . $row['section_name'] : '') . ')' : '');?></td>
 								<td><?php echo $row['register_no'];?></td>
 								<td><?php echo $row['roll'];?></td>
 								<td><?php echo $row['mobileno'];?></td>
@@ -133,3 +134,20 @@ $currency_symbol = $global_config['currency_symbol'];
 <?php endif; ?>
 	</div>
 </div>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+		$('#class_id').on('change', function() {
+			var class_id = $(this).val();
+			if (class_id === "") {
+				$('#section_id').html('<option value=""><?=translate("select_class_first")?></option>');
+			}
+		});
+
+		$(document).ajaxComplete(function(event, xhr, settings) {
+			if (settings.url && settings.url.indexOf('ajax/getClassByBranch') !== -1) {
+				$('#class_id option[value=""]').text("<?=translate('all_class')?>");
+			}
+		});
+	});
+</script>

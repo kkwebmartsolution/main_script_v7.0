@@ -379,6 +379,7 @@ class Fees_model extends MY_Model
 
     public function getDueReport($class_id = '', $section_id = '')
     {
+        $branchID = $this->application_model->get_branch_id();
         $this->db->select('fa.id as allocation_id,sum(gd.amount + fa.prev_due) as total_fees,e.id as enroll_id,e.roll,s.first_name,s.last_name,s.register_no,s.mobileno,c.name as class_name,se.name as section_name');
         $this->db->from('fee_allocation as fa');
         $this->db->join('fee_groups_details as gd', 'gd.fee_groups_id = fa.group_id', 'left');
@@ -388,8 +389,13 @@ class Fees_model extends MY_Model
         $this->db->join('section as se', 'se.id = e.section_id', 'left');
         $this->db->where('fa.session_id', get_session_id());
         $this->db->where('s.active', 1);
-        $this->db->where('e.class_id', $class_id);
-        if (!empty($section_id)) {
+        if (!empty($branchID)) {
+            $this->db->where('e.branch_id', $branchID);
+        }
+        if (!empty($class_id)) {
+            $this->db->where('e.class_id', $class_id);
+        }
+        if (!empty($section_id) && $section_id != 'all') {
             $this->db->where('e.section_id', $section_id);
         }
         $this->db->group_by('fa.student_id');
@@ -507,27 +513,35 @@ class Fees_model extends MY_Model
             $type_id = '';
         }
         if (empty($group) || $group != "transport" ) {
-            $this->db->select('h.*,gd.due_date,ft.name as type_name,e.student_id,e.roll,s.first_name,s.last_name,s.register_no,pt.name as pay_via,h.transport_fee_details_id');
+            $this->db->select('h.*,gd.due_date,ft.name as type_name,e.student_id,e.roll,s.first_name,s.last_name,s.register_no,c.name as class_name,se.name as section_name,pt.name as pay_via,h.transport_fee_details_id');
             $this->db->from('fee_payment_history as h');
             $this->db->join('fee_allocation as fa', 'fa.id = h.allocation_id', 'inner');
             $this->db->join('fees_type as ft', 'ft.id = h.type_id', 'left');
             $this->db->join('fee_groups_details as gd', 'gd.fee_groups_id = fa.group_id and gd.fee_type_id = h.type_id', 'left');
             $this->db->join('enroll as e', 'e.id = fa.student_id and e.session_id =  ' . $this->db->escape(get_session_id()), 'inner');
             $this->db->join('student as s', 's.id = e.student_id', 'inner');
+            $this->db->join('class as c', 'c.id = e.class_id', 'left');
+            $this->db->join('section as se', 'se.id = e.section_id', 'left');
             $this->db->join('payment_types as pt', 'pt.id = h.pay_via', 'left');
             $this->db->where('fa.session_id', get_session_id());
             $this->db->where('s.active', 1);
             $this->db->where('h.date >=', $start);
             $this->db->where('h.date <=', $end);
-            $this->db->where('e.branch_id', $branchID);
-            $this->db->where('e.class_id', $classID);
+            if (!empty($branchID)) {
+                $this->db->where('e.branch_id', $branchID);
+            }
+            if (!empty($classID)) {
+                $this->db->where('e.class_id', $classID);
+            }
             if (!empty($type_id)) {
                 $this->db->where('h.type_id', $type_id);
             }
             if (!empty($enrollID)) {
                 $this->db->where('e.id', $enrollID);
             }
-            $this->db->where('e.section_id', $sectionID);
+            if (!empty($sectionID) && $sectionID != 'all') {
+                $this->db->where('e.section_id', $sectionID);
+            }
             $this->db->order_by('h.id', 'asc');
             $result1 = $this->db->get()->result_array();
         } else {
@@ -535,26 +549,34 @@ class Fees_model extends MY_Model
         }
 
         if (empty($group) || $group == "transport" ) {
-            $this->db->select('h.*,ff.due_date,ff.month as type_name,e.student_id,e.roll,s.first_name,s.last_name,s.register_no,pt.name as pay_via,h.transport_fee_details_id');
+            $this->db->select('h.*,ff.due_date,ff.month as type_name,e.student_id,e.roll,s.first_name,s.last_name,s.register_no,c.name as class_name,se.name as section_name,pt.name as pay_via,h.transport_fee_details_id');
             $this->db->from('fee_payment_history as h');
             $this->db->join('transport_fee_details as fa', 'fa.id = h.transport_fee_details_id', 'inner');
             $this->db->join('transport_fee_fine as ff', 'ff.id = fa.transport_fee_fine_id', 'inner');
             $this->db->join('enroll as e', 'e.id = fa.enroll_id and e.session_id =  ' . $this->db->escape(get_session_id()), 'inner');
             $this->db->join('student as s', 's.id = e.student_id', 'inner');
+            $this->db->join('class as c', 'c.id = e.class_id', 'left');
+            $this->db->join('section as se', 'se.id = e.section_id', 'left');
             $this->db->join('payment_types as pt', 'pt.id = h.pay_via', 'left');
             $this->db->where('ff.session_id', get_session_id());
             $this->db->where('s.active', 1);
             $this->db->where('h.date >=', $start);
             $this->db->where('h.date <=', $end);
-            $this->db->where('e.branch_id', $branchID);
-            $this->db->where('e.class_id', $classID);
+            if (!empty($branchID)) {
+                $this->db->where('e.branch_id', $branchID);
+            }
+            if (!empty($classID)) {
+                $this->db->where('e.class_id', $classID);
+            }
             if (!empty($enrollID)) {
                 $this->db->where('e.id', $enrollID);
             }
             if (!empty($type_id)) {
                 $this->db->where('fa.transport_fee_fine_id', $type_id);
             }
-            $this->db->where('e.section_id', $sectionID);
+            if (!empty($sectionID) && $sectionID != 'all') {
+                $this->db->where('e.section_id', $sectionID);
+            }
             $this->db->order_by('h.id', 'asc');
             $result2 = $this->db->get()->result_array();
         } else {

@@ -25,20 +25,21 @@ $currency_symbol = $global_config['currency_symbol'];
 				<?php endif; ?>
 					<div class="col-md-<?php echo $widget; ?> mb-sm">
 						<div class="form-group">
-							<label class="control-label"><?=translate('class')?> <span class="required">*</span></label>
+							<label class="control-label"><?=translate('class')?></label>
 							<?php
 								$arrayClass = $this->app_lib->getClass($branch_id);
-								echo form_dropdown("class_id", $arrayClass, set_value('class_id'), "class='form-control' id='class_id' onchange='getSectionByClass(this.value,0)'
+								$arrayClass[''] = translate('all_class');
+								echo form_dropdown("class_id", $arrayClass, set_value('class_id'), "class='form-control' id='class_id' onchange='getSectionByClass(this.value,1)'
 								data-plugin-selectTwo data-width='100%'");
 							?>
 						</div>
 					</div>
 					<div class="col-md-<?php echo $widget; ?> mb-sm">
 						<div class="form-group">
-							<label class="control-label"><?=translate('section')?> <span class="required">*</span></label>
+							<label class="control-label"><?=translate('section')?></label>
 							<?php
-								$arraySection = $this->app_lib->getSections(set_value('class_id'), false);
-								echo form_dropdown("section_id", $arraySection, set_value('section_id'), "class='form-control' id='section_id' required
+								$arraySection = $this->app_lib->getSections(set_value('class_id'), true);
+								echo form_dropdown("section_id", $arraySection, set_value('section_id'), "class='form-control' id='section_id'
 								data-plugin-selectTwo data-width='100%'");
 							?>
 						</div>
@@ -141,7 +142,13 @@ $currency_symbol = $global_config['currency_symbol'];
 								$totalFees += $sub_total_fees;
 								?>
 							<tr>
-								<td><?php echo $row['first_name'] . ' ' . $row['last_name'];?></td>
+								<td><?php 
+									$studentGroup = $row['first_name'] . ' ' . $row['last_name'];
+									if (!empty($row['class_name'])) {
+										$studentGroup .= ' (' . $row['class_name'] . (!empty($row['section_name']) ? ' - ' . $row['section_name'] : '') . ')';
+									}
+									echo $studentGroup;
+								?></td>
 								<td><?php echo $row['register_no'];?></td>
 								<td><?php echo $row['roll'];?></td>
 								<td><?php
@@ -280,24 +287,46 @@ $currency_symbol = $global_config['currency_symbol'];
 		var classID = "<?=set_value('class_id')?>";
 		var sectionID = "<?=set_value('section_id')?>";
 		getTypeByBranch(branchID, typeID);
-		getStudentByClass(branchID, classID, sectionID);
+		if (classID) {
+			getStudentByClass(branchID, classID, sectionID);
+		} else {
+			$('#enrollID').html('<option value=""><?=translate("select")?></option>');
+		}
 
 		$('#branch_id').on('change', function() {
 			var branchID = $(this).val();
 			getClassByBranch(branchID);
 			getTypeByBranch(branchID);
+			$('#section_id').html('<option value=""><?=translate("select_class_first")?></option>');
+			$('#enrollID').html('<option value=""><?=translate("select")?></option>');
+		});
 
+		$('#class_id').on('change', function() {
+			var class_id = $(this).val();
+			if (class_id === "") {
+				$('#section_id').html('<option value=""><?=translate("select_class_first")?></option>');
+				$('#enrollID').html('<option value=""><?=translate("select")?></option>');
+			} else {
+				var branch_id = ($( "#branch_id" ).length ? $('#branch_id').val() : "<?=$branch_id?>");
+				getStudentByClass(branch_id, class_id, $('#section_id').val());
+			}
 		});
 
         $('#section_id').on('change', function() {
             var section_id = $(this).val();
             var class_id = $('#class_id').val();
-            var branch_id = ($( "#branch_id" ).length ? $('#branch_id').val() : "");
-            getStudentByClass(branch_id, class_id, section_id);
+            var branch_id = ($( "#branch_id" ).length ? $('#branch_id').val() : "<?=$branch_id?>");
+            if (class_id) {
+                getStudentByClass(branch_id, class_id, section_id);
+            }
         });
 
         function getStudentByClass(branch_id, class_id, section_id) {
 			var enroll_id = "<?=set_value('enroll_id')?>";
+			if (!class_id) {
+				$('#enrollID').html('<option value=""><?=translate("select")?></option>');
+				return;
+			}
 			$.ajax({
 				url: base_url + 'ajax/getStudentByClass/enroll',
 				type: 'POST',
@@ -326,5 +355,11 @@ $currency_symbol = $global_config['currency_symbol'];
 		        }
 		    });
 		}
+
+		$(document).ajaxComplete(function(event, xhr, settings) {
+			if (settings.url && settings.url.indexOf('ajax/getClassByBranch') !== -1) {
+				$('#class_id option[value=""]').text("<?=translate('all_class')?>");
+			}
+		});
 	});
 </script>
