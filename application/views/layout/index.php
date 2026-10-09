@@ -160,5 +160,7 @@
     <?php } ?>
 	<!-- Gemini AI Assistant -->
 	<?php $this->load->view('layout/ai_assistant.php');?>
+	<!-- School Subscription Expiry Countdown Popup -->
+	<?php $this->load->view('layout/subscription_expiry_popup.php');?>
 </body>
 </html>

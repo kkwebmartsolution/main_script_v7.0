@@ -219,3 +219,27 @@
         - Handled copyType directly from server response data.copy_type as primary source with robust fallback.
       - application/helpers/general_helper.php:
         - Bumped asset cache version in version_combine() to force all browsers on live server to immediately reload updated JS without caching issues.
+
+17/ School Subscription Expiry Real-Time Countdown Popup Modal (With Auto-Show on Page Refresh)
+    - Requirement: Agar school subscription ki expiry date near ho (<= 7 days / 1 week remaining ya expired), toh website/page refresh par turant ek modern popup modal appear hona chahiye jisme live real-time countdown timer (Days, Hours, Minutes, Seconds) show ho.
+    - Implementation Details:
+      - application/models/Saas_model.php:
+        - Added `getSubscriptionExpiryDetails($school_id = null)`:
+          - Automatically fetches the active school subscription, package name, school details, and SaaS settings.
+          - Calculates remaining time in seconds and milliseconds (`expire_timestamp_ms`) to prevent timezone discrepancies between server and client.
+          - Checks if subscription is within alert window (`<= 7 days` or configured `expired_alert_days`) or already expired.
+          - Supports `?test_sub_popup=1` parameter for instant preview & testing.
+      - application/views/layout/subscription_expiry_popup.php:
+        - Ultra-premium responsive modal designed with modern glassmorphism, animated beacon pulse icon, and alert status badge.
+        - High-contrast 4-box countdown grid for **Days**, **Hours**, **Minutes**, and **Seconds** with pulsing colons and live JS interval ticking every second.
+        - Summary card showing School Name, Package Name, and formatted Expiry Date.
+        - Direct "Renew Subscription Now" CTA button leading to subscription renewal page (`subscription/index`).
+        - "Remind Later" dismiss button allowing smooth closing without suppressing subsequent page refreshes ("jab bhi website refresh tabhi popup show hona sahie").
+        - Standalone modal fallback support when Bootstrap modal JS is not loaded.
+        - Calculated initial digits (Days, Hours, Mins, Secs) directly in PHP to prevent initial flicker on page render, and computed live elapsed time in JavaScript.
+      - application/views/layout/index.php:
+        - Loaded `layout/subscription_expiry_popup.php` strictly in the admin/staff backend portal before `</body>`.
+        - Completely excluded frontend website (`home/layout/index.php`), students, and parents so popup only opens in the Admin Panel.
+      - Fixed Real-Time Refresh Continuity:
+        - Replaced static offset re-calculation on every request with persistent target timestamp in session/database.
+        - Synchronized server remaining seconds with client real-time ticks so refreshing never resets the timer and counts down continuously.

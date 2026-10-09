@@ -114,6 +114,125 @@ class Saas_model extends MY_Model
         return $message;
     }
 
+    public function getSubscriptionExpiryDetails($school_id = null)
+    {
+        $ci = &get_instance();
+
+        // Allow preview/test mode for testing via query parameter ?test_sub_popup=1
+        $is_test_mode = false;
+        if ($ci->input->get('test_sub_popup') == '1' || $ci->session->userdata('test_sub_popup') == 1) {
+            $is_test_mode = true;
+        }
+
+        if (empty($school_id)) {
+            if ($is_test_mode) {
+                $school_id = get_loggedin_branch_id();
+                if (empty($school_id) || $school_id == 1) {
+                    $test_sub = $this->db->select('school_id')->limit(1)->get('saas_subscriptions')->row();
+                    $school_id = !empty($test_sub) ? $test_sub->school_id : 3;
+                }
+            } else {
+                if (!is_loggedin()) {
+                    return false;
+                }
+                if (is_superadmin_loggedin()) {
+                    return false;
+                }
+                $school_id = get_loggedin_branch_id();
+            }
+        }
+
+        if (empty($school_id)) {
+            return false;
+        }
+
+        $sql = "SELECT `sb`.*, `sp`.`name` as `package_name`, `sp`.`period_type`, `sp`.`price`, `b`.`name` as `branch_name`, `b`.`school_name` 
+                FROM `saas_subscriptions` AS `sb` 
+                LEFT JOIN `saas_package` AS `sp` ON `sp`.`id` = `sb`.`package_id` 
+                LEFT JOIN `branch` AS `b` ON `b`.`id` = `sb`.`school_id` 
+                WHERE `sb`.`school_id` = " . $this->db->escape($school_id);
+        $subscription = $this->db->query($sql)->row();
+
+        if (empty($subscription)) {
+            return false;
+        }
+
+        // If lifetime plan with no expire_date, never expires
+        if (empty($subscription->expire_date) && !$is_test_mode) {
+            return false;
+        }
+
+        $settings = $this->db->where('id', 1)->get('saas_settings')->row();
+        $alert_days = (!empty($settings) && !empty($settings->expired_alert_days)) ? intval($settings->expired_alert_days) : 7;
+        if ($alert_days < 7) {
+            $alert_days = 7;
+        }
+
+        if ($is_test_mode) {
+            // Persist the test target timestamp in session so that refreshing continues counting down in real-time!
+            $session_target = $ci->session->userdata('test_sub_target_time');
+            if (empty($session_target) || $ci->input->get('reset_test') == '1') {
+                $session_target = time() + (6 * 86400) + (18 * 3600) + (34 * 60) + 20;
+                $ci->session->set_userdata('test_sub_target_time', $session_target);
+            }
+            $expire_timestamp = $session_target;
+            $now = time();
+            $diff_seconds = $expire_timestamp - $now;
+            $expire_date = date('Y-m-d', $expire_timestamp);
+            $is_expired = ($diff_seconds <= 0);
+            $is_expiring = true;
+            $days_left = max(0, ceil($diff_seconds / 86400));
+        } else {
+            $expire_date = $subscription->expire_date;
+            if (strlen(trim($expire_date)) <= 10) {
+                $expire_timestamp = strtotime(trim($expire_date) . ' 23:59:59');
+            } else {
+                $expire_timestamp = strtotime(trim($expire_date));
+            }
+            $now = time();
+            $diff_seconds = $expire_timestamp - $now;
+
+            $is_expired = ($diff_seconds <= 0);
+            $threshold_seconds = $alert_days * 86400;
+            $is_expiring = ($diff_seconds <= $threshold_seconds);
+
+            if (!$is_expiring && !$is_expired) {
+                return false;
+            }
+
+            $days_left = $is_expired ? 0 : max(0, ceil($diff_seconds / 86400));
+        }
+
+        $formatted_date = date('d M, Y', strtotime($expire_date));
+
+        $default_alert_msg = "Your school subscription will expire in {$days_left} days. Please renew promptly to avoid service disruption.";
+        $alert_message = (!empty($settings) && !empty($settings->expired_alert_message)) 
+            ? str_replace('{days}', $days_left, $settings->expired_alert_message) 
+            : $default_alert_msg;
+
+        $expired_message = (!empty($settings) && !empty($settings->expired_message)) 
+            ? $settings->expired_message 
+            : "Your school subscription has already expired. Please renew the subscription to continue.";
+
+        return [
+            'is_expiring' => $is_expiring,
+            'is_expired' => $is_expired,
+            'days_left' => $days_left,
+            'alert_days' => $alert_days,
+            'expire_date' => $expire_date,
+            'expire_date_formatted' => $formatted_date,
+            'expire_timestamp_ms' => $expire_timestamp * 1000,
+            'diff_seconds' => $diff_seconds,
+            'school_name' => !empty($subscription->school_name) ? $subscription->school_name : $subscription->branch_name,
+            'branch_name' => $subscription->branch_name,
+            'package_name' => !empty($subscription->package_name) ? $subscription->package_name : translate('standard'),
+            'renew_url' => base_url('subscription/index'),
+            'expired_message' => $expired_message,
+            'alert_message' => $alert_message,
+            'is_test_mode' => $is_test_mode
+        ];
+    }
+
     public function getSchool($id)
     {
         $this->db->select('branch.*,saas_subscriptions.package_id,saas_subscriptions.expire_date,saas_subscriptions.id as subscriptions_id,saas_subscriptions.upgrade_lasttime');
