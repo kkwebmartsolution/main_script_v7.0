@@ -243,3 +243,163 @@
       - Fixed Real-Time Refresh Continuity:
         - Replaced static offset re-calculation on every request with persistent target timestamp in session/database.
         - Synchronized server remaining seconds with client real-time ticks so refreshing never resets the timer and counts down continuously.
+
+18/ Admin Sidebar UI Menu Synonyms Rebranding
+    - Requirement: Admin panel ke main (top-level) menus ke generic names ko contemporary aur professional synonyms me rename karna.
+    - Files Modified:
+      - application/views/layout/sidebar.php: Updated all 31 top-level sidebar navigation menu item labels directly to modern synonyms:
+        - Dashboard -> Overview
+        - Inventory -> Stock & Inventory
+        - Branch -> Campuses
+        - Frontend -> Website Portal
+        - Reception -> Front Desk
+        - Admission -> Enrollment
+        - Student Details -> Student Directory
+        - Parents -> Parents & Guardians
+        - Employee -> Staff & Workforce
+        - Card Management -> ID & Admit Cards
+        - Certificate -> Certificates & Credentials
+        - Human Resource (HRM) -> Personnel & HR
+        - Academic -> Academics & Classes
+        - Live Class Rooms -> Virtual Classrooms
+        - Attachments Book -> Study Materials
+        - Homework -> Assignments & Tasks
+        - Exam Master -> Examinations & Assessments
+        - Online Exam -> Digital & Online Exams
+        - Supervision -> Campus Facilities
+        - Attendance -> Attendance Tracker
+        - Library -> Library & Resources
+        - Events -> Events & Activities
+        - Bulk SMS and Email -> Broadcasts & Alerts
+        - Student Accounting -> Student Billing & Fees (with dynamic offline payments badge)
+        - Office Accounting -> Finance & Accounts
+        - Message -> Messages & Inbox
+        - Reports -> Analytics & Reports
+        - Alumni -> Graduates & Alumni
+        - Addon Manager -> Extensions & Addons
+        - Settings -> System Configuration
+      - application/views/layout/saas_menu.php: Updated SaaS module navigation labels:
+        - School Subscription -> Institution Plans
+        - Subscription -> My Subscription
+        - Custom Domain -> Custom Web Domains
+
+19/ Modern SaaS 2026 Admin UI & Color Theme Redesign
+    - Requirement: Admin panel ka complete UI look and color combination theme redesign karna taaki software ek modern aur ultra-premium SaaS product lage.
+    - Implementation Details:
+      - assets/css/modern-theme.css [NEW]:
+        - Typography: Integrated Google Fonts 'Plus Jakarta Sans' & 'Inter' for crisp typography across all screens.
+        - Color Palette: Replaced outdated mustard-yellow/dull-teal with Electric Indigo (`#4f46e5`), Royal Blue (`#3b82f6`), and vibrant semantic accents (Emerald `#10b981`, Rose `#f43f5e`, Amber `#f59e0b`, Sky `#0ea5e9`).
+        - Dark-Slate Sidebar Navigation: Deep obsidian/slate-950 (`#0b1329`) sidebar with glassmorphic icon containers, active indigo gradient pills (`linear-gradient(135deg, #4f46e5, #6366f1)`), animated chevron carets, smooth hover micro-lifts, and clean indented submenus without dated border lines.
+        - Topbar & Header: Translucent blurred glassmorphism navbar (`rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px)`), dark logo container matching the sidebar, rounded action buttons (`border-radius: 10px`), and pulsing notification badges.
+        - Cards & Panels: Refined cards with rounded corners (`14px`), multi-layer subtle shadows (`box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06)`), and sleek border headers.
+        - Dashboard Stats Widgets: Upgraded metric tiles with gradient icon badges, bold high-contrast numbers, and hover elevation.
+        - Buttons & Form Inputs: Rounded modern controls (`border-radius: 10px`), subtle focus glow rings (`rgba(79, 70, 229, 0.15)`), and gradient CTA buttons.
+        - Datatables & Tabular Views: Modern uppercase tracked header columns, subtle row hovers, pill-style status badges, and rounded pagination buttons.
+      - application/views/layout/header.php: Linked `assets/css/modern-theme.css`.
+      - application/views/layout/stylesheet.php: Added preconnect and Google Fonts link for Plus Jakarta Sans & Inter.
+      - application/views/layout/topbar.php: Refined header action buttons to modern rounded square pills with hover states.
+      - application/helpers/general_helper.php: Bumped version hash to `v7.5_sidebar_contrast_perfect` to force instant client-side asset refresh.
+
+20/ Sidebar UI Light Mode Hover Contrast & Usability Perfection
+    - Problem:
+      - Mouse cursor menu items par le jaane par light mode me text white ho raha tha, jisse white background par text invisible ho gaya tha.
+      - Brand title "KKEDUMART" sidebar me light cyan (`#38bdf8`) tha jo white background par faint aur unreadable lag raha tha.
+      - Browser purane CSS version ko cache kar raha tha.
+    - Fixes Applied:
+      - assets/css/modern-theme.css:
+        - Light Mode High Contrast Hover: `ul.nav-main > li:not(.nav-active) > a:hover` aur `span:hover` par soft indigo pill (`#eef2ff`) aur crystal-clear deep jet slate text (`#0f172a`) enforce kiya. Text kabhi bhi light mode me white nahi hoga.
+        - Active State Distinction: Sirf `.nav-active` items par Indigo gradient pill (`linear-gradient(135deg, #4f46e5, #6366f1)`) ke sath crisp white text maintain kiya.
+        - Submenu Item Hover: Submenu child items par `#e2e8f0` background ke sath `#0f172a` dark text set kiya.
+        - Ergonomic Typography: Text spans me `flex: 1`, `overflow: hidden`, aur `text-overflow: ellipsis` lagaya taaki long menu titles smoothly fit hon aur arrow chevron overlap na kare.
+        - Modern Slim Scrollbar: Outdated yellow scrollbar ko replace karke subtle rounded slate slider (`#cbd5e1`, hover: `#94a3b8`) style kiya.
+      - application/views/layout/sidebar.php:
+        - Updated sidebar header title to bold Electric Indigo (`#4f46e5`) with a modern graduation cap brand icon.
+        - Bumped `version_combine()` hash to `v7.6_single_word_menus` taaki client browser instant cache bust karke naya CSS load kare.
+
+21/ Modern Single-Word Sidebar Menu Names (Removed '&' & Compound Labels)
+    - Requirement:
+      - Sidebar menus me ampersand `&` aur lambe compound names ko hata kar crisp, punchy single-word contemporary SaaS names me convert karna (e.g. Stock & Inventory -> Inventory, Finance & Accounts -> Finance, etc.).
+    - Files Modified:
+      - application/views/layout/sidebar.php:
+        - Stock & Inventory -> Inventory
+        - Website Portal -> Website
+        - Front Desk -> Reception
+        - Student Directory -> Students
+        - Parents & Guardians -> Parents
+        - Staff & Workforce -> Staff
+        - ID & Admit Cards -> Cards
+        - Certificates & Credentials -> Certificates
+        - Personnel & HR -> HRM
+        - Academics & Classes -> Academics
+        - Class & Section -> Classes
+        - Virtual Classrooms -> LiveClass
+        - Study Materials -> Materials
+        - Assignments & Tasks -> Assignments
+        - Examinations & Assessments -> Exams
+        - Digital & Online Exams -> OnlineExams
+        - Campus Facilities -> Facilities
+        - Attendance Tracker -> Attendance
+        - Library & Resources -> Library
+        - Events & Activities -> Events
+        - Broadcasts & Alerts -> Broadcasts
+        - Student Billing & Fees -> Billing
+        - Finance & Accounts -> Finance
+        - Messages & Inbox -> Messages
+        - Analytics & Reports -> Analytics
+        - Graduates & Alumni -> Alumni
+        - Extensions & Addons -> Addons
+        - System Configuration -> Settings
+      - application/views/layout/saas_menu.php:
+        - Institution Plans -> Plans
+        - My Subscription -> Subscription
+        - Custom Web Domains -> Domains
+      - application/helpers/general_helper.php:
+        - Bumped `version_combine()` hash to `v7.7_remove_page_heading`.
+
+22/ Remove Page Heading Banner Across All Pages
+    - Requirement:
+      - Kisi bhi page ko open karne par top-left corner me jo page heading banner (home icon + page title h2) aa raha tha, usko completely remove karna.
+    - Files Modified:
+      - application/views/layout/index.php:
+        - Removed `<header class="page-header">` block entirely from `content-body` so no heading markup is rendered.
+      - assets/css/modern-theme.css:
+        - Enforced `.page-header { display: none !important; }` across all templates and light/dark modes.
+        - Adjusted `.content-body` padding to clean 24px canvas so page content flows seamlessly right beneath the navbar.
+      - application/helpers/general_helper.php:
+        - Bumped `version_combine()` hash to `v7.8_zero_gap_top_content`.
+
+23/ Remove Top Content Gap (Seamless Top Alignment Beneath Navbar)
+    - Problem:
+      - Page heading banner hatane ke baad top me ek 50px-74px ka empty gap/blank space ban gaya tha, jisse page ka content kaafi neeche se shuru ho raha tha.
+    - Root Cause:
+      - `custom-style.css` me `html.fixed .inner-wrapper` par `padding-top: 110px` hardcoded tha (jo 60px header + 50px purane page-header ke hisab se set tha). Page-header hatne ke baad bhi 110px padding reh gayi thi jabki navbar sirf 60px height ka tha, resulting in a 50px dead gap.
+    - Fixes Applied:
+      - assets/css/modern-theme.css:
+        - Set `html.fixed .inner-wrapper, .inner-wrapper { padding-top: 60px !important; }` to exactly match the 60px navbar.
+        - Adjusted `.content-body` padding to `16px 24px 35px 24px !important` with `margin-top: 0 !important`.
+        - Set `.content-body > *:first-child { margin-top: 0 !important; }` so the topmost card/panel/row starts cleanly right below the navbar.
+      - application/helpers/general_helper.php:
+        - Bumped `version_combine()` hash to `v7.8_zero_gap_top_content`.
+
+
+
+24/ Modern SaaS Profile UI & Bespoke Background Banner (/profile)
+    - Requirement:
+      - Profile page (http://127.0.0.1/ramom-v7.0/main_script_v7.0/profile) ka complete UI modernize karna aur ek suitable modern background banner image generate karke add karna.
+    - Implementation Details:
+      - AI Image Generation & Assets:
+        - Bespoke 16:9 ultra-high resolution abstract fluid mesh gradient banner generated (Electric Indigo & Deep Sapphire with violet ambient neon curves).
+        - Saved to assets/images/profile_cover.jpg and updated assets/images/profile_bg.jpg.
+      - assets/css/modern-theme.css (Section 11):
+        - .profile-head: Upgraded hero card with 20px rounded corners, translucent backdrop blur, subtle top glow border, and dynamic dual-layer linear gradient overlay on profile_cover.jpg ensuring pristine contrast.
+        - Legacy Cleanup: Completely eliminated outdated 2015-era diagonal pink slash (.profile-head::before) and rotated yellow/red diamonds (.profile-head ul li .icon-holder:before).
+        - Glassmorphic Stat Chips: Converted plain bulleted list into an interactive flex grid of glass chips with rounded icon containers (linear-gradient(135deg, #6366f1, #4f46e5)), hover elevation, and smooth micro-lifts.
+        - Modern Avatar Elevation: Circular user avatar with multi-layer shadow, ring accents, and subtle hover scale.
+        - Floating Glass Social Badges: Replaced awkward slide-down ribbon dropdown with frosted glass circular action pills below the avatar.
+        - Form Section Dividers: Modernized .headers-line card section dividers with indigo accent bars and icons.
+        - Form Field Polish: Refined input group addons, inputs, and dark-mode styles.
+      - application/views/profile/employee.php, parent.php, student.php:
+        - Expanded profile detail grid column from col-lg-5 col-xl-5 to col-lg-8 col-xl-9 to eliminate empty blank space on widescreen displays.
+        - Replaced plain button with vibrant modern primary CTA button (btn-primary with fas fa-save icon).
+      - application/helpers/general_helper.php:
+        - Bumped version_combine() hash to v7.9_modern_profile_ui to ensure instant cache busting across all user browsers.

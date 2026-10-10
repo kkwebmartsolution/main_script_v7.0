@@ -34,6 +34,8 @@
 	<?php if ($theme_config["border_mode"] == 'false'): ?>
 		<link rel="stylesheet" href="<?php echo base_url('assets/css/skins/square-borders.css?v=' . version_combine());?>">
 	<?php endif; ?>
+	<!-- Modern SaaS UI Theme -->
+	<link rel="stylesheet" href="<?php echo base_url('assets/css/modern-theme.css?v=' . version_combine());?>">
 
 	<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
 	<script type="text/javascript">

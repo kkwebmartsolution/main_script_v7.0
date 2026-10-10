@@ -29,10 +29,6 @@
 			?>
 			<!-- page main content -->
 			<section role="main" class="content-body">
-				<header class="page-header">
-					<a class="page-title-icon" href="<?php echo base_url('dashboard');?>"><i class="fas fa-home"></i></a>
-					<h2><?php echo $title;?></h2>
-				</header>
 				<?php $this->load->view($sub_page); ?>
 			</section>
 		</div>

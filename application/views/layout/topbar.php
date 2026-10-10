@@ -16,36 +16,44 @@
 		}
 
 		.header .header-menu-icon {
-			transform: none !important;
-			border-radius: 0 !important;
-			width: auto !important;
-			height: auto !important;
-			min-width: 32px !important;
-			min-height: 32px !important;
-			background: transparent !important;
-			border: none !important;
+			border-radius: 10px !important;
+			width: 36px !important;
+			height: 36px !important;
+			min-width: 36px !important;
+			min-height: 36px !important;
+			background: #f1f5f9 !important;
+			border: 1px solid transparent !important;
 			box-shadow: none !important;
 			display: inline-flex !important;
 			align-items: center !important;
 			justify-content: center !important;
-			margin: 0 !important;
-			padding: 0 6px !important;
+			margin: 0 3px !important;
+			padding: 0 !important;
 			cursor: pointer !important;
+			transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 		}
 
 		.header .header-menu-icon i,
 		.header .header-menu-icon span {
 			transform: none !important;
-			font-size: 18px !important;
-			color: #64748b !important;
+			font-size: 15px !important;
+			color: #475569 !important;
 			transition: color 0.2s ease !important;
+		}
+
+		.header .header-menu-icon:hover,
+		.header .open > .header-menu-icon,
+		.header li.open .header-menu-icon {
+			background: #eef2ff !important;
+			border-color: rgba(79, 70, 229, 0.2) !important;
+			transform: translateY(-1px) !important;
 		}
 
 		.header .header-menu-icon:hover i,
 		.header .header-menu-icon:focus i,
 		.header .open > .header-menu-icon i,
 		.header li.open .header-menu-icon i {
-			color: #2563eb !important;
+			color: #4f46e5 !important;
 		}
 
 		/* Fix navbar list alignment & spacing */

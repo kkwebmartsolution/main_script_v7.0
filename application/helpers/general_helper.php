@@ -560,11 +560,11 @@ function delete_dir($dirPath)
 function currencyFormat($amount = 0)
 {
     $CI = &get_instance();
-    $array              = $CI->data['global_config'];
-    $currency           = $array['currency'];
-    $currency_symbol    = $array['currency_symbol'];
-    $currency_formats   = $array['currency_formats'];
-    $symbol_position    = $array['symbol_position'];
+    $array = $CI->data['global_config'];
+    $currency = $array['currency'];
+    $currency_symbol = $array['currency_symbol'];
+    $currency_formats = $array['currency_formats'];
+    $symbol_position = $array['symbol_position'];
 
     $amount = empty($amount) ? 0 : $amount;
     $value = $amount;
@@ -587,7 +587,7 @@ function currencyFormat($amount = 0)
     }
 
     if ($symbol_position == 1) {
-        $value = $currency_symbol . $value; 
+        $value = $currency_symbol . $value;
     } elseif ($symbol_position == 2) {
         $value = $value . $currency_symbol;
     } elseif ($symbol_position == 3) {
@@ -604,30 +604,35 @@ function currencyFormat($amount = 0)
 
 function moneyFormatIndia($num)
 {
-    $explrestunits = "" ;
+    $explrestunits = "";
     $num = preg_replace('/,+/', '', $num);
     $words = explode(".", $num);
     $des = "00";
-    if(count($words)<=2){
-        $num=$words[0];
-        if(count($words)>=2){$des=$words[1];}
-        if(strlen($des)<2){$des="$des";}else{$des=substr($des,0,2);}
+    if (count($words) <= 2) {
+        $num = $words[0];
+        if (count($words) >= 2) {
+            $des = $words[1];
+        }
+        if (strlen($des) < 2) {
+            $des = "$des";
+        } else {
+            $des = substr($des, 0, 2);
+        }
     }
-    if(strlen($num)>3){
-        $lastthree = substr($num, strlen($num)-3, strlen($num));
-        $restunits = substr($num, 0, strlen($num)-3); // extracts the last three digits
-        $restunits = (strlen($restunits)%2 == 1)?"0".$restunits:$restunits; // explodes the remaining digits in 2's formats, adds a zero in the beginning to maintain the 2's grouping.
+    if (strlen($num) > 3) {
+        $lastthree = substr($num, strlen($num) - 3, strlen($num));
+        $restunits = substr($num, 0, strlen($num) - 3); // extracts the last three digits
+        $restunits = (strlen($restunits) % 2 == 1) ? "0" . $restunits : $restunits; // explodes the remaining digits in 2's formats, adds a zero in the beginning to maintain the 2's grouping.
         $expunit = str_split($restunits, 2);
-        for($i=0; $i<sizeof($expunit); $i++){
+        for ($i = 0; $i < sizeof($expunit); $i++) {
             // creates each of the 2's group and adds a comma to the end
-            if($i==0)
-            {
-                $explrestunits .= (int)$expunit[$i].","; // if is first value , convert into integer
-            }else{
-                $explrestunits .= $expunit[$i].",";
+            if ($i == 0) {
+                $explrestunits .= (int) $expunit[$i] . ","; // if is first value , convert into integer
+            } else {
+                $explrestunits .= $expunit[$i] . ",";
             }
         }
-        $thecash = $explrestunits.$lastthree;
+        $thecash = $explrestunits . $lastthree;
     } else {
         $thecash = $num;
     }
@@ -643,7 +648,7 @@ function getEnrollToStudentID($enroll_id = '')
 
 function version_combine()
 {
-    return md5(APP_VERSION . '_v7.1_kkedumart'); 
+    return md5(APP_VERSION . '_v7.8_zero_gap_top_content');
 }
 
 function img_reload()

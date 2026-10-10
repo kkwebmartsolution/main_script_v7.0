@@ -1,0 +1,929 @@
+/**
+ * KKEDUMART Modern SaaS 2026 Admin Theme (v7.3)
+ * High-Contrast, Clean Light Mode UI + Easy-to-use Navigation & Controls
+ */
+
+/* ==========================================================================
+   1. GLOBAL DESIGN SYSTEM & TYPOGRAPHY
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+	--font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+	/* Brand Color Palette */
+	--primary: #4f46e5;
+	--primary-hover: #4338ca;
+	--primary-active: #3730a3;
+	--primary-light: #eef2ff;
+	--primary-border: #c7d2fe;
+	--primary-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+	--primary-gradient-hover: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+
+	/* High-Contrast Neutral Slates */
+	--slate-50: #f8fafc;
+	--slate-100: #f1f5f9;
+	--slate-200: #e2e8f0;
+	--slate-300: #cbd5e1;
+	--slate-400: #94a3b8;
+	--slate-500: #64748b;
+	--slate-600: #475569;
+	--slate-700: #334155;
+	--slate-800: #1e293b;
+	--slate-900: #0f172a;
+
+	/* Semantic Colors */
+	--success: #10b981;
+	--success-hover: #059669;
+	--success-light: #ecfdf5;
+	--success-border: #a7f3d0;
+	--success-text: #065f46;
+
+	--danger: #ef4444;
+	--danger-hover: #dc2626;
+	--danger-light: #fef2f2;
+	--danger-border: #fecaca;
+	--danger-text: #991b1b;
+
+	--warning: #f59e0b;
+	--warning-hover: #d97706;
+	--warning-light: #fffbeb;
+	--warning-border: #fde68a;
+	--warning-text: #92400e;
+
+	--info: #0ea5e9;
+	--info-hover: #0284c7;
+	--info-light: #f0f9ff;
+	--info-border: #bae6fd;
+	--info-text: #0369a1;
+
+	/* Surfaces & Elevations */
+	--bg-body: #f8fafc;
+	--bg-card: #ffffff;
+	--border-color: #e2e8f0;
+	--border-light: #f1f5f9;
+
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius-lg: 14px;
+	--radius-xl: 18px;
+	--radius-full: 9999px;
+}
+
+body,
+html {
+	font-family: var(--font-main) !important;
+	background: var(--bg-body) !important;
+	color: var(--slate-700) !important;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   2. SIDEBAR NAVIGATION (LIGHT MODE & DEFAULT - HIGH CONTRAST & VISIBLE)
+   ========================================================================== */
+
+/* Clean White Sidebar Canvas */
+.sidebar-left,
+html.sidebar-light:not(.dark) .sidebar-left,
+html.sidebar-light .sidebar-left {
+	background: #ffffff !important;
+	border-right: 1px solid var(--border-color) !important;
+	box-shadow: 1px 0 4px rgba(15, 23, 42, 0.03) !important;
+}
+
+.sidebar-left .nano,
+html.sidebar-light:not(.dark) .sidebar-left .nano,
+html.sidebar-light .sidebar-left .nano {
+	background: #ffffff !important;
+	box-shadow: none !important;
+}
+
+.sidebar-left .nano-content {
+	background: #ffffff !important;
+}
+
+/* Modern Slim Nano Scroller */
+.sidebar-left .nano>.nano-pane,
+html.sidebar-light .sidebar-left .nano>.nano-pane {
+	background: transparent !important;
+	width: 5px !important;
+	right: 2px !important;
+}
+
+.sidebar-left .nano>.nano-pane>.nano-slider,
+html.no-overflowscrolling .nano>.nano-pane>.nano-slider,
+html.sidebar-light .sidebar-left .nano>.nano-pane>.nano-slider {
+	background: #cbd5e1 !important;
+	border-radius: 9999px !important;
+}
+
+.sidebar-left .nano>.nano-pane>.nano-slider:hover {
+	background: #94a3b8 !important;
+}
+
+/* Sidebar Brand Header */
+.sidebar-left .sidebar-header,
+html.sidebar-light:not(.dark) .sidebar-left .sidebar-header,
+html.sidebar-light .sidebar-left .sidebar-header {
+	background: #ffffff !important;
+	border-bottom: 1px solid var(--border-color) !important;
+	height: 60px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 16px !important;
+}
+
+.sidebar-left .sidebar-header .sidebar-title,
+html.sidebar-light:not(.dark) .sidebar-left .sidebar-header .sidebar-title {
+	background: transparent !important;
+	color: var(--primary) !important;
+	font-family: var(--font-main) !important;
+	font-size: 15px !important;
+	font-weight: 800 !important;
+	letter-spacing: 1.2px !important;
+	padding: 0 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 8px !important;
+}
+
+/* Nav Main Container */
+ul.nav-main {
+	margin: 10px 0 35px 0 !important;
+	padding: 0 !important;
+}
+
+/* Remove clunky bottom lines */
+ul.nav-main li:not(.nav-children li) {
+	border-bottom: none !important;
+}
+
+/* Top-Level Menu Items */
+ul.nav-main>li {
+	margin: 3px 10px !important;
+}
+
+ul.nav-main>li>a,
+html.sidebar-light:not(.dark) ul.nav-main>li>a {
+	display: flex !important;
+	align-items: center !important;
+	padding: 9px 12px !important;
+	border-radius: var(--radius-md) !important;
+	color: #334155 !important;
+	/* CRISP DARK SLATE - HIGH VISIBILITY */
+	font-size: 13.5px !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.01em !important;
+	transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	border: none !important;
+	background: transparent !important;
+	text-decoration: none !important;
+}
+
+ul.nav-main>li>a>span,
+html.sidebar-light:not(.dark) ul.nav-main>li>a>span {
+	flex: 1 !important;
+	min-width: 0 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	color: inherit !important;
+	font-weight: inherit !important;
+	transition: color 0.18s ease !important;
+}
+
+/* TOP-LEVEL MENU ITEM HOVER - NEVER WHITE TEXT IN LIGHT MODE! */
+ul.nav-main>li:not(.nav-active)>a:hover,
+ul.nav-main>li:not(.nav-active)>a:focus,
+html.sidebar-light:not(.dark) ul.nav-main>li:not(.nav-active)>a:hover,
+html.sidebar-light:not(.dark) ul.nav-main>li:not(.nav-active)>a:focus {
+	background: #eef2ff !important;
+	/* Soft indigo pill */
+	color: #0f172a !important;
+	/* DEEP JET SLATE - 100% VISIBLE, NEVER WHITE */
+	transform: translateX(2px) !important;
+}
+
+ul.nav-main>li:not(.nav-active)>a:hover>span,
+ul.nav-main>li:not(.nav-active)>a:focus>span,
+html.sidebar-light:not(.dark) ul.nav-main>li:not(.nav-active)>a:hover>span,
+html.sidebar-light:not(.dark) ul.nav-main>li:not(.nav-active)>a:focus>span {
+	color: #0f172a !important;
+	/* EXPLICIT DARK TEXT ON SPAN - NEVER WHITE */
+}
+
+/* TOP-LEVEL MENU ICONS */
+ul.nav-main li a i:not(.nav-children a i) {
+	width: 32px !important;
+	height: 32px !important;
+	min-width: 32px !important;
+	border-radius: 8px !important;
+	background: #f1f5f9 !important;
+	/* Soft light slate badge */
+	color: #4f46e5 !important;
+	/* Vibrant indigo icon */
+	box-shadow: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-right: 12px !important;
+	font-size: 14px !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Menu Item Icon on Hover */
+ul.nav-main>li:not(.nav-active)>a:hover i:not(.nav-children a i),
+html.sidebar-light:not(.dark) ul.nav-main>li:not(.nav-active)>a:hover i:not(.nav-children a i) {
+	background: #e0e7ff !important;
+	color: #4338ca !important;
+	transform: scale(1.06) !important;
+}
+
+/* ACTIVE TOP-LEVEL MENU */
+ul.nav-main>li.nav-active>a,
+ul.nav-main>li.nav-expanded.nav-active>a,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-active>a,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded.nav-active>a {
+	background: var(--primary-gradient) !important;
+	color: #ffffff !important;
+	/* Crisp white on indigo gradient */
+	font-weight: 700 !important;
+	box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+	transform: none !important;
+}
+
+ul.nav-main>li.nav-active>a>span,
+ul.nav-main>li.nav-expanded.nav-active>a>span,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-active>a>span,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded.nav-active>a>span {
+	color: #ffffff !important;
+}
+
+ul.nav-main>li.nav-active>a i:not(.nav-children a i),
+ul.nav-main>li.nav-expanded.nav-active>a i:not(.nav-children a i) {
+	background: rgba(255, 255, 255, 0.22) !important;
+	color: #ffffff !important;
+}
+
+/* Active Top-Level Hover */
+ul.nav-main>li.nav-active>a:hover,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-active>a:hover {
+	background: var(--primary-gradient-hover) !important;
+	color: #ffffff !important;
+	box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45) !important;
+}
+
+ul.nav-main>li.nav-active>a:hover>span,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-active>a:hover>span {
+	color: #ffffff !important;
+}
+
+/* EXPANDED PARENT MENU (when active or open) */
+ul.nav-main>li.nav-expanded:not(.nav-active)>a,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded:not(.nav-active)>a {
+	background: #f8fafc !important;
+	color: #0f172a !important;
+	border: 1px solid #e2e8f0 !important;
+}
+
+ul.nav-main>li.nav-expanded:not(.nav-active)>a>span,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded:not(.nav-active)>a>span {
+	color: #0f172a !important;
+}
+
+ul.nav-main>li.nav-expanded:not(.nav-active)>a:hover,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded:not(.nav-active)>a:hover {
+	background: #eef2ff !important;
+	color: #0f172a !important;
+	border-color: #c7d2fe !important;
+}
+
+ul.nav-main>li.nav-expanded:not(.nav-active)>a:hover>span,
+html.sidebar-light:not(.dark) ul.nav-main>li.nav-expanded:not(.nav-active)>a:hover>span {
+	color: #0f172a !important;
+}
+
+/* Caret / Arrow Indicator for Parents */
+ul.nav-main li.nav-parent>a:after {
+	margin-left: auto !important;
+	font-family: 'Font Awesome 5 Free' !important;
+	font-weight: 900 !important;
+	content: '\f107' !important;
+	border: none !important;
+	font-size: 12px !important;
+	color: #64748b !important;
+	transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+ul.nav-main li.nav-parent:hover>a:after {
+	color: #4f46e5 !important;
+}
+
+ul.nav-main li.nav-parent.nav-expanded>a:after {
+	transform: rotate(180deg) !important;
+	color: #4f46e5 !important;
+}
+
+ul.nav-main>li.nav-active.nav-parent>a:after {
+	color: #ffffff !important;
+}
+
+/* SUBMENU CONTAINER */
+ul.nav-main li .nav-children,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children {
+	background: #f8fafc !important;
+	border-radius: var(--radius-md) !important;
+	margin: 4px 8px 6px 16px !important;
+	padding: 6px 4px !important;
+	border-left: 3px solid #cbd5e1 !important;
+	box-shadow: none !important;
+}
+
+/* Submenu Child Links */
+ul.nav-main li .nav-children li {
+	margin: 2px 4px !important;
+}
+
+ul.nav-main li .nav-children li a,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a {
+	padding: 8px 12px !important;
+	border-radius: var(--radius-sm) !important;
+	font-size: 12.5px !important;
+	color: #475569 !important;
+	/* Clear Slate-600 */
+	display: flex !important;
+	align-items: center !important;
+	font-weight: 500 !important;
+	transition: all 0.15s ease !important;
+	text-decoration: none !important;
+	background: transparent !important;
+}
+
+ul.nav-main li .nav-children li a>span,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a>span {
+	color: inherit !important;
+	flex: 1 !important;
+	min-width: 0 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+}
+
+/* SUBMENU HOVER - HIGH CONTRAST DARK TEXT! */
+ul.nav-main li .nav-children li a:hover,
+ul.nav-main li .nav-children li a:focus,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a:hover,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a:focus {
+	background: #e2e8f0 !important;
+	color: #0f172a !important;
+	/* DEEP DARK SLATE - NEVER WHITE! */
+	transform: translateX(3px) !important;
+}
+
+ul.nav-main li .nav-children li a:hover>span,
+ul.nav-main li .nav-children li a:focus>span,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a:hover>span,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li a:focus>span {
+	color: #0f172a !important;
+	/* EXPLICIT DARK TEXT ON SPAN - NEVER WHITE! */
+}
+
+/* Active Submenu Item */
+ul.nav-main li .nav-children li.nav-active a,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li.nav-active a {
+	color: #4f46e5 !important;
+	background: #eef2ff !important;
+	font-weight: 700 !important;
+}
+
+ul.nav-main li .nav-children li.nav-active a>span,
+html.sidebar-light:not(.dark) ul.nav-main li .nav-children li.nav-active a>span {
+	color: #4f46e5 !important;
+}
+
+ul.nav-main li .nav-children li a i.fa-caret-right {
+	font-size: 10px !important;
+	margin-right: 8px !important;
+	color: #94a3b8 !important;
+}
+
+ul.nav-main li .nav-children li.nav-active a i.fa-caret-right {
+	color: #4f46e5 !important;
+}
+
+/* Offline Payments Badge inside Student Billing */
+ul.nav-main .badge {
+	background: var(--danger) !important;
+	color: #fff !important;
+	font-size: 10px !important;
+	font-weight: 700 !important;
+	border-radius: var(--radius-full) !important;
+	padding: 2px 7px !important;
+	margin-left: 6px !important;
+	box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35) !important;
+}
+
+/* Collapsed Sidebar Hover State */
+html.sidebar-left-collapsed .sidebar-left .nano:hover {
+	box-shadow: 4px 0 20px rgba(15, 23, 42, 0.08) !important;
+	background: #ffffff !important;
+}
+
+/* ==========================================================================
+   3. TOPBAR & LOGO SECTION
+   ========================================================================== */
+.header {
+	background: #ffffff !important;
+	border-bottom: 1px solid var(--border-color) !important;
+	height: 60px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+/* Logo Box Matching Topbar & Sidebar */
+.header .logo-env,
+html.sidebar-light:not(.dark) .header .logo-env {
+	background: #ffffff !important;
+	border-bottom: 1px solid var(--border-color) !important;
+	border-right: 1px solid var(--border-color) !important;
+	height: 59px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	box-shadow: none !important;
+}
+
+/* Action Icon Buttons */
+.header .header-menu-icon {
+	width: 36px !important;
+	height: 36px !important;
+	border-radius: var(--radius-md) !important;
+	background: #f1f5f9 !important;
+	border: 1px solid transparent !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin: 0 4px !important;
+	cursor: pointer !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.header .header-menu-icon i {
+	font-size: 15px !important;
+	color: #475569 !important;
+	transition: color 0.2s ease !important;
+}
+
+.header .header-menu-icon:hover {
+	background: #eef2ff !important;
+	border-color: rgba(79, 70, 229, 0.2) !important;
+	transform: translateY(-1px) !important;
+}
+
+.header .header-menu-icon:hover i {
+	color: #4f46e5 !important;
+}
+
+/* Search input in topbar */
+.header .input-search input.form-control {
+	border-radius: var(--radius-full) !important;
+	background: #f1f5f9 !important;
+	border: 1px solid var(--border-color) !important;
+	padding: 7px 16px !important;
+	font-size: 13px !important;
+	color: #1e293b !important;
+	height: 36px !important;
+	transition: all 0.2s ease !important;
+}
+
+.header .input-search input.form-control:focus {
+	background: #ffffff !important;
+	border-color: var(--primary) !important;
+	box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+.header .input-search .btn {
+	border-radius: var(--radius-full) !important;
+	background: transparent !important;
+	border: none !important;
+	color: #94a3b8 !important;
+}
+
+.header .input-search .btn:hover {
+	color: var(--primary) !important;
+}
+
+/* User Profile Box */
+.userbox a {
+	padding: 4px 10px !important;
+	border-radius: var(--radius-md) !important;
+	transition: background 0.2s ease !important;
+}
+
+.userbox a:hover {
+	background: #f1f5f9 !important;
+}
+
+.userbox .profile-info .name {
+	font-family: var(--font-main) !important;
+	font-weight: 700 !important;
+	font-size: 13.5px !important;
+	color: #0f172a !important;
+}
+
+.userbox .profile-info .role {
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	color: var(--primary) !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.04em !important;
+}
+
+/* Dropdown Menus */
+.header .dropdown-menu {
+	border: 1px solid var(--border-color) !important;
+	border-radius: var(--radius-lg) !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+	padding: 8px !important;
+}
+
+/* ==========================================================================
+   4. CONTENT BODY & INNER WRAPPER (ZERO EMPTY GAP - SEAMLESS TOP ALIGNMENT)
+   ========================================================================== */
+html.fixed .inner-wrapper,
+.inner-wrapper {
+	padding-top: 60px !important;
+	/* Exactly match 60px fixed navbar height */
+}
+
+.content-body,
+html.fixed .content-body {
+	background: var(--bg-body) !important;
+	padding: 16px 24px 35px 24px !important;
+	min-height: calc(100vh - 60px) !important;
+	margin-top: 0 !important;
+}
+
+/* Ensure the first element inside any page view starts directly at the top */
+.content-body>*:first-child,
+.content-body>.row:first-child,
+.content-body>.panel:first-child,
+.content-body>div:first-child,
+.content-body>form:first-child {
+	margin-top: 0 !important;
+}
+
+/* Completely remove page heading banner from all pages */
+.page-header,
+html.fixed .page-header,
+html.sidebar-light:not(.dark) .page-header,
+header.page-header {
+	display: none !important;
+	height: 0 !important;
+	min-height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+	box-shadow: none !important;
+	visibility: hidden !important;
+	opacity: 0 !important;
+	overflow: hidden !important;
+}
+
+/* ==========================================================================
+   5. CARDS, PANELS & CONTAINERS
+   ========================================================================== */
+.panel {
+	background: var(--bg-card) !important;
+	border: 1px solid var(--border-color) !important;
+	border-radius: var(--radius-lg) !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+	margin-bottom: 22px !important;
+	overflow: hidden !important;
+}
+
+.panel-heading {
+	background: #ffffff !important;
+	border-bottom: 1px solid var(--border-light) !important;
+	padding: 16px 22px !important;
+	border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+.panel-title {
+	font-family: var(--font-main) !important;
+	font-size: 15px !important;
+	font-weight: 700 !important;
+	color: #0f172a !important;
+	letter-spacing: -0.01em !important;
+	display: flex !important;
+	align-items: center !important;
+}
+
+.panel-title i {
+	color: var(--primary) !important;
+	margin-right: 8px !important;
+}
+
+.panel-body {
+	padding: 22px !important;
+	color: var(--slate-700) !important;
+}
+
+.panel-footer {
+	background: var(--slate-50) !important;
+	border-top: 1px solid var(--border-light) !important;
+	padding: 14px 22px !important;
+	border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
+}
+
+/* Featured Panel Borders */
+.panel-featured-primary {
+	border-top: 3px solid var(--primary) !important;
+}
+
+.panel-featured-info {
+	border-top: 3px solid var(--info) !important;
+}
+
+.panel-featured-success {
+	border-top: 3px solid var(--success) !important;
+}
+
+.panel-featured-danger {
+	border-top: 3px solid var(--danger) !important;
+}
+
+/* ==========================================================================
+   6. DASHBOARD METRICS TILES
+   ========================================================================== */
+.row.widget-row-in {
+	background: #ffffff !important;
+	border-radius: var(--radius-lg) !important;
+	border: 1px solid var(--border-color) !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+	overflow: hidden !important;
+	margin-bottom: 22px !important;
+}
+
+.widget-col-in {
+	padding: 20px 24px !important;
+}
+
+.widget-row-in i {
+	color: var(--primary) !important;
+	background: var(--primary-light) !important;
+	width: 50px !important;
+	height: 50px !important;
+	border-radius: var(--radius-lg) !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 22px !important;
+}
+
+.widget-row-in h3 {
+	font-family: var(--font-main) !important;
+	font-size: 26px !important;
+	font-weight: 800 !important;
+	color: #0f172a !important;
+	margin: 8px 0 2px 0 !important;
+}
+
+.widget-row-in p.text-muted {
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.04em !important;
+	color: var(--slate-500) !important;
+	margin: 0 !important;
+}
+
+/* ==========================================================================
+   7. BUTTONS & FORMS (CLEAR & EASY TO OPERATE)
+   ========================================================================== */
+.btn {
+	font-family: var(--font-main) !important;
+	font-weight: 600 !important;
+	font-size: 13.5px !important;
+	border-radius: var(--radius-md) !important;
+	padding: 8px 18px !important;
+	transition: all 0.18s ease !important;
+}
+
+body .btn-primary {
+	background: var(--primary-gradient) !important;
+	border: none !important;
+	color: #ffffff !important;
+	box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3) !important;
+}
+
+body .btn-primary:hover,
+body .btn-primary:focus {
+	background: var(--primary-gradient-hover) !important;
+	color: #ffffff !important;
+	transform: translateY(-1px) !important;
+	box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4) !important;
+}
+
+body .btn-default {
+	background: #ffffff !important;
+	border: 1.5px solid var(--border-color) !important;
+	color: var(--slate-700) !important;
+}
+
+body .btn-default:hover,
+body .btn-default:focus {
+	background: var(--slate-100) !important;
+	color: var(--slate-900) !important;
+	border-color: var(--slate-300) !important;
+}
+
+body .btn-success {
+	background: var(--success) !important;
+	border: none !important;
+	color: #ffffff !important;
+	box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+}
+
+body .btn-danger {
+	background: var(--danger) !important;
+	border: none !important;
+	color: #ffffff !important;
+	box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Form Inputs */
+.form-group label {
+	font-family: var(--font-main) !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	color: var(--slate-700) !important;
+	margin-bottom: 6px !important;
+}
+
+.form-control {
+	border-radius: var(--radius-md) !important;
+	border: 1.5px solid var(--border-color) !important;
+	background: #ffffff !important;
+	padding: 9px 14px !important;
+	font-size: 13.5px !important;
+	color: var(--slate-800) !important;
+	transition: all 0.18s ease !important;
+}
+
+.form-control:focus {
+	border-color: var(--primary) !important;
+	box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+	outline: none !important;
+}
+
+.select2-container--bootstrap .select2-selection {
+	border-radius: var(--radius-md) !important;
+	border: 1.5px solid var(--border-color) !important;
+	height: 38px !important;
+}
+
+.select2-container--bootstrap.select2-container--focus .select2-selection {
+	border-color: var(--primary) !important;
+	box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* ==========================================================================
+   8. TABLES & LISTINGS
+   ========================================================================== */
+table.dataTable,
+.table {
+	border: 1px solid var(--border-color) !important;
+	border-radius: var(--radius-lg) !important;
+	overflow: hidden !important;
+	background: #ffffff !important;
+	width: 100% !important;
+}
+
+.table thead th,
+table.dataTable thead th {
+	background: var(--slate-100) !important;
+	color: var(--slate-700) !important;
+	font-weight: 700 !important;
+	font-size: 11.5px !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.04em !important;
+	border-bottom: 2px solid var(--border-color) !important;
+	padding: 13px 16px !important;
+}
+
+.table tbody td,
+table.dataTable tbody td {
+	padding: 13px 16px !important;
+	border-bottom: 1px solid var(--border-light) !important;
+	vertical-align: middle !important;
+	font-size: 13.5px !important;
+	color: var(--slate-700) !important;
+}
+
+.table-hover tbody tr:hover,
+table.dataTable tbody tr:hover td {
+	background-color: var(--slate-50) !important;
+}
+
+/* ==========================================================================
+   9. STATUS LABELS & TABS
+   ========================================================================== */
+.label {
+	border-radius: var(--radius-full) !important;
+	font-family: var(--font-main) !important;
+	font-weight: 600 !important;
+	padding: 4px 10px !important;
+	font-size: 11px !important;
+}
+
+.label-primary {
+	background-color: var(--primary-light) !important;
+	color: var(--primary) !important;
+	border: 1px solid var(--primary-border) !important;
+}
+
+.label-success {
+	background-color: var(--success-light) !important;
+	color: var(--success-text) !important;
+	border: 1px solid var(--success-border) !important;
+}
+
+.label-danger {
+	background-color: var(--danger-light) !important;
+	color: var(--danger-text) !important;
+	border: 1px solid var(--danger-border) !important;
+}
+
+.label-warning {
+	background-color: var(--warning-light) !important;
+	color: var(--warning-text) !important;
+	border: 1px solid var(--warning-border) !important;
+}
+
+.nav-tabs {
+	border-bottom: 2px solid var(--border-color) !important;
+}
+
+.nav-tabs>li>a {
+	border: none !important;
+	border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+	font-weight: 600 !important;
+	color: var(--slate-500) !important;
+	padding: 12px 20px !important;
+}
+
+.nav-tabs>li.active>a {
+	background: #ffffff !important;
+	color: var(--primary) !important;
+	border-bottom: 2.5px solid var(--primary) !important;
+	font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   10. DARK SKIN ADAPTATION (FOR USERS WHO EXPLICITLY ENABLE DARK MODE)
+   ========================================================================== */
+html.dark .sidebar-left {
+	background: #0f172a !important;
+	border-right: 1px solid #1e293b !important;
+}
+
+html.dark .sidebar-left .nano {
+	background: #0f172a !important;
+}
+
+html.dark .sidebar-left .sidebar-header {
+	background: #090e1e !important;
+	border-bottom: 1px solid #1e293b !important;
+}
+
+html.dark ul.nav-main>li>a {
+	color: #94a3b8 !important;
+}
+
+html.dark ul.nav-main>li>a:hover,
+html.dark ul.nav-main>li>a:focus {
+	background: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+}
+
+html.dark ul.nav-main li a i:not(.nav-children a i) {
+	background: rgba(255, 255, 255, 0.05) !important;
+	color: #818cf8 !important;
+}
+
+html.dark ul.nav-main li .nav-children {
+	background: rgba(0, 0, 0, 0.25) !important;
+	border-left: 2px solid #334155 !important;
+}
+
+html.dark ul.nav-main li .nav-children li a {
+	color: #94a3b8 !important;
+}
+
+html.dark ul.nav-main li .nav-children li a:hover {
+	background: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+}

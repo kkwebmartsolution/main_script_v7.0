@@ -3,7 +3,7 @@
         class="nav-parent <?php if ($main_menu == 'saas' || $main_menu == 'saas_setting' || $main_menu == 'custom_domain' || $main_menu == 'saas_offline_payments')
             echo 'nav-expanded nav-active'; ?>">
         <a>
-            <i class="fas fa-sitemap"></i><span><?= translate('school_subscription') ?></span>
+            <i class="fas fa-sitemap"></i><span>Plans</span>
         </a>
         <ul class="nav nav-children">
             <li class="<?php if ($sub_page == 'saas/school')
@@ -62,7 +62,7 @@ if (is_admin_loggedin()):
     <li class="<?php if ($main_menu == 'subscription')
         echo 'nav-active'; ?>">
         <a href="<?= base_url('subscription/index') ?>">
-            <i class="icons icon-directions"></i><span><?= translate('subscription') ?></span>
+            <i class="icons icon-directions"></i><span>Subscription</span>
         </a>
     </li>
 <?php endif; ?>
@@ -72,7 +72,7 @@ if (is_admin_loggedin()):
         <li class="<?php if ($main_menu == 'domain_request')
             echo 'nav-active'; ?>">
             <a href="<?= base_url('custom_domain/mylist') ?>">
-                <i class="fab fa-wikipedia-w"></i><span><?= translate('custom_domain') ?></span>
+                <i class="fab fa-wikipedia-w"></i><span>Domains</span>
             </a>
         </li>
     <?php }

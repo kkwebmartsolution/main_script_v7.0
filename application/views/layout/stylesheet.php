@@ -1,4 +1,7 @@
 <!-- Web Fonts  -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="<?php echo is_secure('fonts.googleapis.com/css?family=Signika:wght@300..700&display=swap');?>" rel="stylesheet"> 
 <link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap/css/bootstrap.css');?>">
 <?php if ($this->app_lib->isRTLenabled()) { ?>
