@@ -403,3 +403,18 @@
         - Replaced plain button with vibrant modern primary CTA button (btn-primary with fas fa-save icon).
       - application/helpers/general_helper.php:
         - Bumped version_combine() hash to v7.9_modern_profile_ui to ensure instant cache busting across all user browsers.
+
+25/ High-Contrast Bold & Crisp Typography (Fix Faint/Light Text)
+    - Problem:
+      - UI change ke baad entire software me text kaafi light/faint ho gaya tha aur clearly visible nahi ho raha tha (default thin 400 weight + grayscale font smoothing + light slate colors).
+    - Fixes Applied:
+      - assets/css/modern-theme.css:
+        - Baseline Weight: Set `font-weight: 500 !important;` on `body, html` so all regular text renders with medium weight instead of thin 400.
+        - Font Smoothing: Replaced `antialiased / grayscale` with `-webkit-font-smoothing: subpixel-antialiased !important; -moz-osx-font-smoothing: auto !important;` restoring rich subpixel rendering on Windows and high-DPI displays.
+        - Dark Slate Contrast: Darkened neutral slate tokens (`--slate-500` through `--slate-900`) and set primary body text to `#1e293b`.
+        - Tables & Datatables: Enhanced table cell text (`td`) to `font-weight: 500 !important; color: #1e293b !important;` and header (`th`) to `font-weight: 700 !important; color: #0f172a !important; font-size: 12px !important;`.
+        - Forms & Inputs: Form labels set to `font-weight: 600 !important; color: #0f172a !important;` and `.form-control` & Select2 values set to `font-weight: 500 !important; color: #0f172a !important;`.
+        - Sidebar Navigation: Set top-level menu text to `font-weight: 600 !important; color: #0f172a !important;` and submenus to `font-weight: 600 !important; color: #1e293b !important; font-size: 13px !important;`.
+        - Panels, Tabs & Cards: Panel content set to `font-weight: 500 !important; color: #1e293b !important;`, tabs set to `font-weight: 600/700 !important;`, and status badges to `font-weight: 700 !important;`.
+      - application/helpers/general_helper.php:
+        - Bumped `version_combine()` hash to `v8.0_bold_readable_typography` to ensure immediate browser cache busting.

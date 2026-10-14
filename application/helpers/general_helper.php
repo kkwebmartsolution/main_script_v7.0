@@ -648,7 +648,7 @@ function getEnrollToStudentID($enroll_id = '')
 
 function version_combine()
 {
-    return md5(APP_VERSION . '_v7.8_zero_gap_top_content');
+    return md5(APP_VERSION . '_v8.0_bold_readable_typography');
 }
 
 function img_reload()
