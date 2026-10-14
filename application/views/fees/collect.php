@@ -543,6 +543,7 @@ if (moduleIsEnabled('transport')) {
 						</div>
 						<div class="invoice-summary text-right mt-lg visible-print-block" id="invPaymentHistory"></div>
 					</div>
+					<div class="text-right mr-lg hidden-print">
 						<div class="btn-group mr-xs hidden-print">
 							<button id="payReceiptPrint" class="btn btn-default" data-copy-type="both" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing">
 								<i class="fas fa-print"></i> Selected Pay Receipt
