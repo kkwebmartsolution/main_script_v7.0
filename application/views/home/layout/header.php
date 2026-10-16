@@ -255,7 +255,8 @@
                         <?php
                         $school = $this->uri->segment(1);
                         $result = $this->home_model->menuList($school);
-                        $authenticationURL = base_url((!empty($cms_setting['url_alias']) ? $cms_setting['url_alias'] : '') . '/authentication');
+                        $schoolAlias = !empty($cms_setting['url_alias']) ? $cms_setting['url_alias'] : (!empty($school) ? $school : '');
+                        $authenticationURL = base_url((!empty($schoolAlias) ? $schoolAlias . '/' : '') . 'authentication');
 
                         foreach ($result as $key => $row) {
                             $active_menu = ($currentURL == $row['url']) ? ' active' : '';

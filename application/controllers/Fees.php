@@ -105,8 +105,43 @@ class Fees extends Admin_Controller
             if (!is_superadmin_loggedin()) {
                 $this->db->where('branch_id', get_loggedin_branch_id());
             }
+            $this->db->where('system', 0);
             $this->db->where('id', $id);
             $this->db->delete('fees_type');
+            if ($this->db->affected_rows() > 0) {
+                $this->db->where('fee_type_id', $id);
+                $this->db->delete('fee_groups_details');
+            }
+        }
+    }
+
+    /* fees type bulk delete */
+    public function type_bulk_delete()
+    {
+        $status = 'error';
+        $message = translate('access_denied');
+        if ($_POST) {
+            if (get_permission('fees_type', 'is_delete')) {
+                $arrayID = $this->input->post('array_id');
+                if (!empty($arrayID) && is_array($arrayID)) {
+                    if (!is_superadmin_loggedin()) {
+                        $this->db->where('branch_id', get_loggedin_branch_id());
+                    }
+                    $this->db->where('system', 0);
+                    $this->db->where_in('id', $arrayID);
+                    $this->db->delete('fees_type');
+                    if ($this->db->affected_rows() > 0) {
+                        $this->db->where_in('fee_type_id', $arrayID);
+                        $this->db->delete('fee_groups_details');
+                    }
+                    $status = 'success';
+                    $message = translate('information_deleted');
+                } else {
+                    $status = 'error';
+                    $message = translate('no_selection');
+                }
+            }
+            echo json_encode(array('status' => $status, 'message' => $message));
         }
     }
 

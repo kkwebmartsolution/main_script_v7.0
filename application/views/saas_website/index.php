@@ -136,7 +136,7 @@
                             <div class="header-btn">
                                 <div class="button add-list-button">
                                     <?php if (!is_loggedin()) { ?>
-                                        <a href="https://schools.sssassam.com/authentication/index"
+                                        <a href="<?php echo base_url('authentication'); ?>"
                                             class="btn"><?php echo translate('login'); ?></a>
                                     <?php } else { ?>
                                         <a href="<?php echo base_url('dashboard/index') ?>"

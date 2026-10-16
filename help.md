@@ -418,3 +418,17 @@
         - Panels, Tabs & Cards: Panel content set to `font-weight: 500 !important; color: #1e293b !important;`, tabs set to `font-weight: 600/700 !important;`, and status badges to `font-weight: 700 !important;`.
       - application/helpers/general_helper.php:
         - Bumped `version_combine()` hash to `v8.0_bold_readable_typography` to ensure immediate browser cache busting.
+
+26/ Fix Wrong Login Link on Website (Universal Relative & Dynamic Base URL)
+    - Problem:
+      - Website me "Login" button par click karne par galat link open ho raha tha:
+        1. Main SaaS Landing Page (`school-saas/index.html`) me top navigation "Login" button `https://schools.kkwebmart.in/authentication/index` par hardcoded tha aur baki login buttons `http://127.0.0.1/ramom-v7.0/main_script_v7.0/authentication` par hardcoded the.
+        2. `application/views/saas_website/index.php` me login button `https://schools.sssassam.com/authentication/index` par hardcoded tha.
+        3. School template me static alias hardcoded the.
+    - Files Modified:
+      - `school-saas/index.html`: Hardcoded domains ko relative path `../authentication` se replace kiya taaki kisi bhi domain ya local environment me hamesha correct current installation ka login page open ho.
+      - `school-saas/index copy.html`: Same relative path `../authentication` update kiya.
+      - `application/views/saas_website/index.php`: Hardcoded URL ko dynamic `<?php echo base_url('authentication'); ?>` se replace kiya.
+      - `application/views/home/layout/header.php`: `$authenticationURL` me double slash issue fix kiya aur URI alias support add kiya.
+      - `application/views/home/schools/bhakatgaon/index.php`: Hardcoded school alias ko dynamic `$cms_setting['url_alias']` me convert kiya.
+

@@ -220,10 +220,11 @@ $first_bg = !empty($slider_images[0]) ? "background: linear-gradient(135deg, rgb
                     Building academic excellence, modern innovation, and future-ready character for every student.
                 </p>
                 <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
-                    <a href="<?php echo base_url('bhakatgaon/authentication'); ?>" class="btn glass-action-btn me-3">
+                    <?php $bAlias = !empty($cms_setting['url_alias']) ? $cms_setting['url_alias'] : 'bhakatgaon'; ?>
+                    <a href="<?php echo base_url($bAlias . '/authentication'); ?>" class="btn glass-action-btn me-3">
                         <i class="fas fa-sign-in-alt me-2"></i> Student / Staff Login
                     </a>
-                    <a href="<?php echo base_url('bhakatgaon/admission'); ?>" class="btn glass-outline-btn">
+                    <a href="<?php echo base_url($bAlias . '/admission'); ?>" class="btn glass-outline-btn">
                         <i class="fas fa-file-alt me-2"></i> Online Admission
                     </a>
                 </div>
