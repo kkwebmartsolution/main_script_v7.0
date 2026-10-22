@@ -657,6 +657,58 @@ class Fees extends Admin_Controller
         }
     }
 
+    public function receipt_signature($enrollID = '')
+    {
+        if (!get_permission('invoice', 'is_view') || !get_permission('collect_fees', 'is_add')) {
+            access_denied();
+            return;
+        }
+        $basic = $this->fees_model->getInvoiceBasic($enrollID);
+        if (empty($basic) || (!is_superadmin_loggedin() && (int) $basic['branch_id'] !== (int) get_loggedin_branch_id())) {
+            access_denied();
+            return;
+        }
+        $url = base_url('fees/invoice/' . (int) $enrollID);
+        if ($this->input->method() !== 'post') {
+            redirect($url);
+            return;
+        }
+        $file = isset($_FILES['receipt_signature']) ? $_FILES['receipt_signature'] : array();
+        $error = 'Please upload a PNG or JPG signature (maximum 2 MB and 2000 x 2000 pixels).';
+        if (isset($file['error'], $file['tmp_name'], $file['size']) && $file['error'] === UPLOAD_ERR_OK
+            && $file['size'] <= 2 * 1024 * 1024 && is_uploaded_file($file['tmp_name'])) {
+            $info = @getimagesize($file['tmp_name']);
+            if ($info && in_array($info[2], array(IMAGETYPE_PNG, IMAGETYPE_JPEG), true)
+                && $info[0] <= 2000 && $info[1] <= 2000 && function_exists('imagecreatefromstring')) {
+                $image = @imagecreatefromstring(file_get_contents($file['tmp_name']));
+                if ($image !== false) {
+                    imagesavealpha($image, true);
+                    $directory = FCPATH . 'uploads/receipt_signatures/';
+                    if (is_dir($directory) || @mkdir($directory, 0755, true)) {
+                        // Encode as PNG to preserve transparency and discard uploaded file content.
+                        $temporary = tempnam($directory, 'signature_');
+                        if ($temporary !== false) {
+                            $saved = imagepng($image, $temporary)
+                                && rename($temporary, $directory . 'branch_' . (int) $basic['branch_id'] . '.png');
+                            if (is_file($temporary)) {
+                                unlink($temporary);
+                            }
+                            if ($saved) {
+                                $error = '';
+                            }
+                        }
+                    }
+                    imagedestroy($image);
+                    if ($error !== '') {
+                        $error = 'Unable to save the signature. Please check upload folder permissions.';
+                    }
+                }
+            }
+        }
+        set_alert($error === '' ? 'success' : 'error', $error === '' ? 'Receipt signature saved successfully.' : $error);
+        redirect($url);
+    }
+
     public function carry_fees_save()
     {
         if (!get_permission('collect_fees', 'is_add')) {

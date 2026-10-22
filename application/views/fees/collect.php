@@ -30,9 +30,32 @@ if ($extINTL == true) {
 			<li>
 				<a href="#carry_fees" data-toggle="tab"><i class="fas fa-forward"></i> Carry Fees</a>
 			</li>
+			<li>
+				<a href="#signature_upload" data-toggle="tab"><i class="fas fa-signature"></i> Signature Upload</a>
+			</li>
 <?php endif; ?>
 		</ul>
 		<div class="tab-content">
+<?php if (get_permission('collect_fees', 'is_add')): ?>
+<div id="signature_upload" class="tab-pane hidden-print">
+	<h4>Authorised Signature</h4>
+	<div class="panel-body">
+		<?php echo form_open_multipart('fees/receipt_signature/' . (int) $basic['enroll_id']); ?>
+		<?php $receiptSignature = $this->fees_model->getReceiptSignature($basic['branch_id']); ?>
+		<?php if ($receiptSignature !== ''): ?>
+			<img src="<?=html_escape($receiptSignature)?>" alt="Authorised signature" style="max-width: 180px; max-height: 60px; margin-bottom: 10px;">
+		<?php endif; ?>
+		<div class="form-group">
+			<label for="receipt_signature">Upload / Replace Signature</label>
+			<input type="file" name="receipt_signature" id="receipt_signature" accept="image/png,image/jpeg" required>
+			<p class="help-block">PNG or JPG, maximum 2 MB and 2000 × 2000 pixels. This signature will appear on all fee receipts for this branch. A transparent PNG is recommended.</p>
+		</div>
+		<button type="submit" class="btn btn-primary">Save Signature</button>
+		<?php echo form_close(); ?>
+	</div>
+</div>
+<?php endif; ?>
+
 			<div id="invoice" class="tab-pane <?=empty($this->session->flashdata('pay_tab')) ? 'active' : ''; ?>">
 				<div id="invoice_print">
 					<div class="invoice">

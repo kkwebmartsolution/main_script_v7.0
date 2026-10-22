@@ -217,7 +217,8 @@ foreach ($paymentHistory as $row) {
 }
 $grand_paid = currencyFormat($total_paid + $total_fine);
 
-$renderCopy = function($copy_title) use ($basic, $paymentHistory, $total_paid, $total_discount, $total_fine, $grand_paid) {
+$receiptSignature = $this->fees_model->getReceiptSignature($basic['branch_id']);
+$renderCopy = function($copy_title) use ($basic, $paymentHistory, $total_paid, $total_discount, $total_fine, $grand_paid, $receiptSignature) {
 ?>
 	<div class="invoice">
 		<div class="invoice-body">
@@ -309,12 +310,15 @@ $renderCopy = function($copy_title) use ($basic, $paymentHistory, $total_paid, $
 		</div>
 
 		<!-- Signatures and footer at the bottom of the card -->
-		<div class="receipt-bottom-bar" style="margin-top: auto; padding-top: 24px;">
+		<div class="receipt-bottom-bar" style="margin-top: auto; padding-top: <?=$receiptSignature !== '' ? '52' : '24'?>px;">
 			<div class="receipt-signatures" style="display: flex; justify-content: space-between; font-size: 11px;">
 				<div style="text-align: center; width: 140px; border-top: 1px dashed #666; padding-top: 4px;">
 					<strong><?=translate('student')?> / <?=translate('parent')?></strong>
 				</div>
 				<div style="text-align: center; width: 140px; border-top: 1px dashed #666; padding-top: 4px;">
+					<?php if ($receiptSignature !== ''): ?>
+						<img src="<?=html_escape($receiptSignature)?>" alt="Authorised signature" style="display: block; max-width: 130px; height: 40px; object-fit: contain; margin: -45px auto 5px;">
+					<?php endif; ?>
 					<strong><?=translate('authorized_signatory')?></strong>
 				</div>
 			</div>

@@ -4,6 +4,13 @@
 
 class Fees_model extends MY_Model
 {
+    public function getReceiptSignature($branchID)
+    {
+        $relative = 'uploads/receipt_signatures/branch_' . (int) $branchID . '.png';
+        $path = FCPATH . $relative;
+        return is_file($path) ? base_url($relative) . '?v=' . md5_file($path) : '';
+    }
+
     public function __construct()
     {
         parent::__construct();
