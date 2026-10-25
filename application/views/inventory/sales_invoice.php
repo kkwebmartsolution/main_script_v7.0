@@ -32,11 +32,11 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 			<li class="<?php echo (empty($active_tab) || $active_tab == 1 ? 'active' : ''); ?>">
 				<a href="#invoice" data-toggle="tab"><i class="far fa-credit-card"></i> <?php echo translate('invoice'); ?></a>
 			</li>
-<?php if($total_paid > 1 && get_permission('purchase_payment', 'is_view')):?>
+<?php if($total_paid > 1 && get_permission('sales_payment', 'is_view')):?>
 			<li class="<?php echo ($active_tab == 2 ? 'active' : ''); ?>">
 				<a href="#payment_history" data-toggle="tab"><i class="fas fa-dollar-sign"></i> <?php echo translate('payment_history'); ?></a>
 			</li>
-<?php endif; if($billdata['payment_status'] != 3 && get_permission('purchase_payment', 'is_add')): ?>
+<?php endif; if($billdata['payment_status'] != 3 && get_permission('sales_payment', 'is_add')): ?>
 			<li class="<?php echo ($active_tab == 3 ? 'active' : ''); ?>">
 				<a href="#add_payment" data-toggle="tab"><i class="far fa-money-bill-alt"></i> <?php echo translate('add_payment'); ?></a>
 			</li>
@@ -201,7 +201,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 					</div>
 				</div>
 			</div>
-<?php if($total_paid > 1 && get_permission('purchase_payment', 'is_view')): ?>
+<?php if($total_paid > 1 && get_permission('sales_payment', 'is_view')): ?>
 			<div class="tab-pane <?php echo ($active_tab == 2 ? 'active' : ''); ?>" id="payment_history">
 				<div id="payment_print">
 					<div class="invoice">
@@ -336,7 +336,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 			</div>
 <?php endif; ?>
 			
-<?php if($billdata['payment_status'] != 3 && get_permission('purchase_payment', 'is_add')): ?>
+<?php if($billdata['payment_status'] != 3 && get_permission('sales_payment', 'is_add')): ?>
 			<!-- add payment form -->
 			<div id="add_payment" class="tab-pane <?php echo ($active_tab == 3 ? 'active' : ''); ?>">
 				<?php echo form_open_multipart('inventory/add_sales_payment', array('class' => 'form-horizontal form-bordered frm-submit-data')); ?>

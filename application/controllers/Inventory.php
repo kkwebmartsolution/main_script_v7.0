@@ -1148,7 +1148,7 @@ if (is_superadmin_loggedin()) {
             if ($this->form_validation->run() !== false) {
                 $this->inventory_model->save_sales_payment($data);
                 set_alert('success', translate('payment_successfull'));
-                if (get_permission('purchase_payment', 'is_view')) {
+                if (get_permission('sales_payment', 'is_view')) {
                     $this->session->set_flashdata('active_tab', 2);
                 }
                 $array = array('status' => 'success');
