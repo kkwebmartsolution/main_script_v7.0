@@ -901,6 +901,46 @@ if (moduleIsEnabled('transport')) {
 	</section>
 </div>
 
+<!-- Fee Revert SMS OTP Verification Modal -->
+<div class="modal fade" id="revertOtpModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+	<div class="modal-dialog modal-sm" style="max-width: 440px; margin: 60px auto;">
+		<div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+			<div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px 22px;">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="font-size: 26px; line-height: 1;">&times;</button>
+				<h4 class="modal-title" style="font-weight: 700; color: #0f172a; display: flex; align-items: center; margin: 0; font-size: 17px;">
+					<i class="fas fa-sms text-success" style="font-size: 24px; margin-right: 10px;"></i>
+					SMS OTP Verification
+				</h4>
+			</div>
+			<div class="modal-body" style="padding: 24px 22px; text-align: center;">
+				<div class="alert alert-info text-left" style="font-size: 13px; line-height: 1.5; margin-bottom: 16px; border-radius: 8px; border-left: 4px solid #0284c7;">
+					<i class="fas fa-shield-alt text-info" style="margin-right: 4px;"></i>
+					A 6-digit verification OTP has been sent via SMS to Admin mobile: <strong id="otp_target_mobile" class="text-dark"></strong>. Please enter the OTP to authorize fee revert.
+				</div>
+
+
+				<div class="form-group" style="margin: 20px 0 10px 0;">
+					<label class="control-label text-weight-bold" style="font-size: 13px; color: #334155; margin-bottom: 8px; display: block;">Enter 6-Digit Verification OTP</label>
+					<input type="text" id="revert_otp_input" class="form-control text-center" maxlength="6" placeholder="• • • • • •" style="font-size: 26px; font-weight: 700; letter-spacing: 8px; height: 52px; border-radius: 8px; border: 2px solid #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); max-width: 250px; margin: 0 auto;" autocomplete="off" inputmode="numeric">
+					<div id="otp_error_msg" class="text-danger font-weight-semibold" style="display: none; font-size: 12px; margin-top: 8px;"></div>
+				</div>
+
+				<div style="font-size: 12px; color: #64748b; margin-top: 18px;">
+					<span id="otp_timer_wrap">Didn't receive code? Resend in <strong id="otp_countdown" class="text-dark">60</strong>s</span>
+					<a href="javascript:void(0);" id="btn_resend_otp" style="display: none; font-weight: 700;" class="text-primary"><i class="fas fa-redo-alt"></i> Resend OTP</a>
+				</div>
+			</div>
+			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 22px;">
+				<button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600;"><?php echo translate('cancel'); ?></button>
+				<button type="button" id="btn_verify_revert" class="btn btn-danger" style="border-radius: 6px; font-weight: 600; min-width: 140px;">
+					<i class="fas fa-trash-restore-alt"></i> Verify & Revert
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
 <script type="text/javascript">
 	var branchID = "<?php echo $basic['branch_id']; ?>";
 	var studentID = "<?php echo $basic['enroll_id']; ?>";
@@ -1222,55 +1262,204 @@ if (moduleIsEnabled('transport')) {
 		executePayReceiptPrint(target, copyType, $btn);
 	});
 
-    $('#selected_revert').on('click', function(e){
-    	var $this = $(this);
-		var paymentID = [];
-		$("#paymentHistory tbody input[name='cb_feePay']:checked").each(function() {
-			paymentID.push($(this).val());
+	var pendingRevertPaymentIDs = [];
+	var otpCountdownInterval = null;
+
+	function startOtpTimer(seconds) {
+		clearInterval(otpCountdownInterval);
+		var timeLeft = seconds || 60;
+		$('#otp_timer_wrap').show();
+		$('#btn_resend_otp').hide();
+		$('#otp_countdown').text(timeLeft);
+
+		otpCountdownInterval = setInterval(function() {
+			timeLeft--;
+			$('#otp_countdown').text(timeLeft);
+			if (timeLeft <= 0) {
+				clearInterval(otpCountdownInterval);
+				$('#otp_timer_wrap').hide();
+				$('#btn_resend_otp').show();
+			}
+		}, 1000);
+	}
+
+	function requestRevertOtp($btn) {
+		if ($btn) {
+			$btn.button('loading');
+		}
+		$('#otp_error_msg').hide().text('');
+
+		$.ajax({
+			url: base_url + 'fees/send_revert_otp',
+			type: "POST",
+			data: {
+				'enroll_id': studentID,
+				'payment_ids': pendingRevertPaymentIDs
+			},
+			dataType: "JSON",
+			success: function(data) {
+				if ($btn) {
+					$btn.button('reset');
+				}
+				if (data.status === 'success') {
+					$('#otp_target_mobile').text(data.masked_mobile ? data.masked_mobile : 'Admin');
+
+					$('#revert_otp_input').val('');
+					startOtpTimer(60);
+					$('#revertOtpModal').modal('show');
+					setTimeout(function() {
+						$('#revert_otp_input').focus();
+					}, 500);
+				} else {
+					swal({
+						title: "SMS OTP Error",
+						text: data.message || "Failed to send SMS verification OTP.",
+						type: "error",
+						confirmButtonClass: "btn btn-default swal2-btn-default",
+						buttonsStyling: false
+					});
+				}
+			},
+			error: function(xhr, status, error) {
+				if ($btn) {
+					$btn.button('reset');
+				}
+				swal({
+					title: "Request Error",
+					text: "Failed to communicate with server: " + (error || status),
+					type: "error",
+					confirmButtonClass: "btn btn-default swal2-btn-default",
+					buttonsStyling: false
+				});
+			}
 		});
+	}
+
+	$('#selected_revert').on('click', function(e) {
+		var $this = $(this);
+		pendingRevertPaymentIDs = [];
+		$("#paymentHistory tbody input[name='cb_feePay']:checked").each(function() {
+			pendingRevertPaymentIDs.push($(this).val());
+		});
+
+		if (pendingRevertPaymentIDs.length === 0) {
+			swal({
+				title: "No Payments Selected",
+				text: "Please select at least one fee payment record from the payment history table to revert.",
+				type: "warning",
+				confirmButtonClass: "btn btn-default swal2-btn-default",
+				buttonsStyling: false
+			});
+			return;
+		}
+
 		swal({
 			title: "<?php echo translate('are_you_sure')?>",
-			text: "<?php echo translate('delete_this_information')?>",
+			text: "An SMS OTP will be sent to the School Admin mobile to authorize reverting " + pendingRevertPaymentIDs.length + " payment record(s).",
 			type: "warning",
 			showCancelButton: true,
-			confirmButtonClass: "btn btn-default swal2-btn-default",
+			confirmButtonClass: "btn btn-danger swal2-btn-default",
 			cancelButtonClass: "btn btn-default swal2-btn-default",
-			confirmButtonText: "<?php echo translate('yes_continue')?>",
+			confirmButtonText: "<i class='fas fa-sms'></i> Send SMS OTP",
 			cancelButtonText: "<?php echo translate('cancel')?>",
 			buttonsStyling: false,
 			footer: "<?php echo translate('deleted_note')?>"
 		}).then((result) => {
 			if (result.value) {
-				$.ajax({
-					url: base_url + 'fees/paymentRevert',
-					type: "POST",
-					data: {'id': paymentID},
-					dataType: "JSON",
-	                beforeSend: function () {
-	                    $this.button('loading');
-	                },
-					success:function(data) {
-						swal({
+				requestRevertOtp($this);
+			}
+		});
+	});
+
+	$('#btn_resend_otp').on('click', function(e) {
+		e.preventDefault();
+		var $btn = $(this);
+		$btn.html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+		$.ajax({
+			url: base_url + 'fees/send_revert_otp',
+			type: "POST",
+			data: {
+				'enroll_id': studentID,
+				'payment_ids': pendingRevertPaymentIDs
+			},
+			dataType: "JSON",
+			success: function(data) {
+				$btn.html('<i class="fas fa-redo-alt"></i> Resend OTP');
+				if (data.status === 'success') {
+					if (data.masked_mobile) {
+						$('#otp_target_mobile').text(data.masked_mobile);
+					}
+
+					$('#otp_error_msg').hide().text('');
+					$('#revert_otp_input').val('').focus();
+					startOtpTimer(60);
+				} else {
+					$('#otp_error_msg').text(data.message || 'Failed to resend OTP.').show();
+				}
+			},
+			error: function() {
+				$btn.html('<i class="fas fa-redo-alt"></i> Resend OTP');
+				$('#otp_error_msg').text('Server communication error. Please try again.').show();
+			}
+		});
+	});
+
+	$('#btn_verify_revert').on('click', function(e) {
+		var otpVal = $('#revert_otp_input').val().trim();
+		if (!otpVal || otpVal.length !== 6 || !/^\d+$/.test(otpVal)) {
+			$('#otp_error_msg').text('Please enter a valid 6-digit numeric OTP code.').show();
+			$('#revert_otp_input').focus();
+			return;
+		}
+
+		$('#otp_error_msg').hide().text('');
+		var $btn = $(this);
+		var originalText = $btn.html();
+		$btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Verifying...');
+
+		$.ajax({
+			url: base_url + 'fees/paymentRevert',
+			type: "POST",
+			data: {
+				'id': pendingRevertPaymentIDs,
+				'enroll_id': studentID,
+				'otp': otpVal
+			},
+			dataType: "JSON",
+			success: function(data) {
+				$btn.prop('disabled', false).html(originalText);
+				if (data.status === 'success') {
+					$('#revertOtpModal').modal('hide');
+					clearInterval(otpCountdownInterval);
+					swal({
 						title: "<?php echo translate('deleted')?>",
-						text: data.message,
+						text: data.message || "Fee payment(s) successfully reverted after OTP verification.",
 						buttonsStyling: false,
 						showCloseButton: true,
 						focusConfirm: false,
 						confirmButtonClass: "btn btn-default swal2-btn-default",
-						type: data.status
-						}).then((result) => {
-							if (result.value) {
-								location.reload();
-							}
-						});
-					},
-	                complete: function () {
-	                    $this.button('reset');
-	                }
-				});
+						type: "success"
+					}).then((result) => {
+						location.reload();
+					});
+				} else {
+					$('#otp_error_msg').text(data.message || 'Invalid or expired OTP.').show();
+					$('#revert_otp_input').select().focus();
+				}
+			},
+			error: function(xhr, status, error) {
+				$btn.prop('disabled', false).html(originalText);
+				$('#otp_error_msg').text('Server communication error: ' + (error || status)).show();
 			}
 		});
-    });
+	});
+
+	$('#revert_otp_input').on('keypress', function(e) {
+		if (e.which === 13) {
+			$('#btn_verify_revert').trigger('click');
+		}
+	});
+
 
 
     $('#fees_type').on("change", function(){

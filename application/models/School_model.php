@@ -55,7 +55,7 @@ class School_model extends MY_Model
             'whatsapp_status' => isset($data['whatsapp_status']) ? intval($data['whatsapp_status']) : 1,
             'whatsapp_api_url' => isset($data['whatsapp_api_url']) ? trim($data['whatsapp_api_url']) : 'https://waba.kkwebmart.in/api/v1',
             'whatsapp_api_key' => isset($data['whatsapp_api_key']) ? trim($data['whatsapp_api_key']) : 'kkwaba_live_6Zl4DD-P-JylxkORDszcDvDg_jreH6RS0OdPGdWKx_0',
-            'whatsapp_template_name' => isset($data['whatsapp_template_name']) ? trim($data['whatsapp_template_name']) : 'payment_rechived',
+            'whatsapp_template_name' => isset($data['whatsapp_template_name']) ? trim($data['whatsapp_template_name']) : 'payment_rcv_school',
             'whatsapp_student_notification' => isset($data['whatsapp_student_notification']) ? 1 : 0,
             'whatsapp_parent_notification' => isset($data['whatsapp_parent_notification']) ? 1 : 0,
         );

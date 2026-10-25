@@ -49,8 +49,8 @@ if (!empty($whatsapp['backend_enable_chat']) && $whatsapp['backend_enable_chat']
                     <div class="form-group">
                         <label class="col-md-3 control-label"><?=translate('template_name')?></label>
                         <div class="col-md-6">
-                            <input type="text" class="form-control" name="whatsapp_template_name" value="<?php echo !empty($school['whatsapp_template_name']) ? $school['whatsapp_template_name'] : 'payment_rechived' ?>" placeholder="payment_rechived" />
-                            <span class="help-block"><small>Template: <code>payment_rechived</code></small></span>
+                            <input type="text" class="form-control" name="whatsapp_template_name" value="<?php echo !empty($school['whatsapp_template_name']) ? $school['whatsapp_template_name'] : 'payment_rcv_school' ?>" placeholder="payment_rcv_school" />
+                            <span class="help-block"><small>Fee Payment Alert Template: <code>payment_rcv_school</code>. This template also sends a receipt alert to the Admin mobile in School Settings.</small></span>
                         </div>
                     </div>
                     <div class="form-group mb-md">

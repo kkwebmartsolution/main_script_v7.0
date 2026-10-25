@@ -13,7 +13,7 @@ class Whatsapp_model extends CI_Model
     /**
      * Send WhatsApp Fee Payment Notification
      * 
-     * Template: payment_rechived
+     * Template: payment_rcv_school
      * "Dear {{1}},
      * We have successfully received your payment of ₹{{2}} for {{3}}.
      * Payment Date: {{4}}
@@ -60,7 +60,7 @@ class Whatsapp_model extends CI_Model
 
         $apiKey = !empty($branch['whatsapp_api_key']) ? trim($branch['whatsapp_api_key']) : 'kkwaba_live_6Zl4DD-P-JylxkORDszcDvDg_jreH6RS0OdPGdWKx_0';
         $apiUrl = !empty($branch['whatsapp_api_url']) ? trim($branch['whatsapp_api_url']) : 'https://waba.kkwebmart.in/api/v1';
-        $templateName = !empty($branch['whatsapp_template_name']) ? trim($branch['whatsapp_template_name']) : 'payment_rechived';
+        $templateName = !empty($branch['whatsapp_template_name']) ? trim($branch['whatsapp_template_name']) : 'payment_rcv_school';
 
         if (empty($apiKey)) {
             log_message('error', "Whatsapp_model: API key missing for branch ID: " . $branchID);
@@ -87,6 +87,15 @@ class Whatsapp_model extends CI_Model
         // Student
         if ($notify_student == 1 && !empty($student['mobileno'])) {
             $formatted = $this->format_number($student['mobileno']);
+            if ($formatted) {
+                $recipients[] = $formatted;
+            }
+        }
+
+        // The school receipt template also notifies the branch admin.
+        // Keep student/parent notification preferences and deduplicate shared numbers.
+        if ($templateName === 'payment_rcv_school' && !empty($branch['mobileno'])) {
+            $formatted = $this->format_number($branch['mobileno']);
             if ($formatted) {
                 $recipients[] = $formatted;
             }
@@ -144,12 +153,17 @@ class Whatsapp_model extends CI_Model
 
         // 5. Send message to all recipients via direct reliable WABA cURL
         $results = array();
+        $allAccepted = true;
         foreach ($recipients as $recipient) {
             $res = $this->send_direct($apiUrl, $apiKey, $recipient, $templateName, $parameters, $branchID);
             $results[$recipient] = $res;
+            if (empty($res['status'])) {
+                $allAccepted = false;
+                log_message('error', 'Fee payment WhatsApp request failed for branch ' . $branchID . ', queue ' . $res['queue_id'] . ', HTTP ' . $res['http_code']);
+            }
         }
 
-        return array('status' => true, 'results' => $results);
+        return array('status' => $allAccepted, 'results' => $results);
     }
 
     /**
@@ -201,7 +215,7 @@ class Whatsapp_model extends CI_Model
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         } else {
-            ob_flush();
+            // Output buffers were already closed above (Apache/mod_php).
             flush();
         }
     }
@@ -276,7 +290,11 @@ class Whatsapp_model extends CI_Model
         $curlErr = curl_error($ch);
         curl_close($ch);
 
-        $success = ($httpCode >= 200 && $httpCode < 300);
+        $decoded = json_decode((string) $response, true);
+        // HTTP 2xx alone is not confirmation that the provider accepted a message.
+        // Acceptance is also not confirmation of delivery to the recipient.
+        $messageId = isset($decoded['data']['whatsapp_message_id']) ? $decoded['data']['whatsapp_message_id'] : (isset($decoded['messages'][0]['id']) ? $decoded['messages'][0]['id'] : null);
+        $success = empty($curlErr) && $httpCode >= 200 && $httpCode < 300 && !empty($messageId) && empty($decoded['error']);
         $status = $success ? 2 : 3;
 
         $updateData = array(
@@ -318,5 +336,244 @@ class Whatsapp_model extends CI_Model
         }
 
         return false;
+    }
+
+    /**
+     * Send Verification OTP via WhatsApp to School Admin Mobile
+     *
+     * @param string $to Admin mobile number from school settings
+     * @param string $otp 6-digit numeric OTP code
+     * @param int|null $branchID Branch / School ID
+     * @param string|null $templateName Custom template name (defaults to 'verification_otp' or branch setting)
+     * @return array Status and details
+     */
+    public function send_otp($to, $otp, $branchID = null, $templateName = null)
+    {
+        if (empty($branchID)) {
+            $branchID = $this->application_model->get_branch_id();
+        }
+        $branch = $this->db->get_where('branch', array('id' => $branchID))->row_array();
+        if (empty($branch)) {
+            return array('status' => false, 'message' => 'Branch not found');
+        }
+
+        if (isset($branch['whatsapp_status']) && intval($branch['whatsapp_status']) === 0) {
+            return array('status' => false, 'message' => 'WhatsApp notifications are disabled for this branch in School Settings.');
+        }
+
+        if (empty($templateName)) {
+            $templateName = !empty($branch['whatsapp_otp_template']) ? trim($branch['whatsapp_otp_template']) : 'verification_otp';
+        }
+
+        $apiKey = !empty($branch['whatsapp_api_key']) ? trim($branch['whatsapp_api_key']) : 'kkwaba_live_wM5jwBQBeJkmQLzQ5JC3nGGg5ggQ-UJ1r1uMHyU5JHg';
+        $apiUrl = !empty($branch['whatsapp_api_url']) ? trim($branch['whatsapp_api_url']) : 'https://waba.kkwebmart.in/api/v1';
+
+        $formatted = $this->format_number($to);
+        if (!$formatted) {
+            return array('status' => false, 'message' => 'Invalid mobile number in School Settings: ' . $to);
+        }
+
+        $endpoint = rtrim($apiUrl, '/');
+        if (substr($endpoint, -9) !== '/messages') {
+            $endpoint .= '/messages';
+        }
+
+        // Meta Approved Template Payloads for verification_otp:
+        // Body: *{{1}}* is your verification code. For your security, do not share this code.
+        // Button: Copy Code (dynamic URL button: https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=10&code=otp{{1}})
+        $payloadAttempts = array(
+            // Attempt 1: Standard URL button index "0", text $otp (en)
+            'auth_otp_url_button_en' => array(
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $formatted,
+                'type' => 'template',
+                'template' => array(
+                    'name' => $templateName,
+                    'language' => array('code' => 'en'),
+                    'components' => array(
+                        array(
+                            'type' => 'body',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => (string) $otp)
+                            )
+                        ),
+                        array(
+                            'type' => 'button',
+                            'sub_type' => 'url',
+                            'index' => '0',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => (string) $otp)
+                            )
+                        )
+                    )
+                )
+            ),
+            // Attempt 2: Standard URL button index "0", text 'otp'.$otp (en)
+            'auth_otp_url_prefix_en' => array(
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $formatted,
+                'type' => 'template',
+                'template' => array(
+                    'name' => $templateName,
+                    'language' => array('code' => 'en'),
+                    'components' => array(
+                        array(
+                            'type' => 'body',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => (string) $otp)
+                            )
+                        ),
+                        array(
+                            'type' => 'button',
+                            'sub_type' => 'url',
+                            'index' => '0',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => 'otp' . (string) $otp)
+                            )
+                        )
+                    )
+                )
+            ),
+            // Attempt 3: Language en_US with URL button
+            'auth_otp_url_button_en_US' => array(
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $formatted,
+                'type' => 'template',
+                'template' => array(
+                    'name' => $templateName,
+                    'language' => array('code' => 'en_US'),
+                    'components' => array(
+                        array(
+                            'type' => 'body',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => (string) $otp)
+                            )
+                        ),
+                        array(
+                            'type' => 'button',
+                            'sub_type' => 'url',
+                            'index' => '0',
+                            'parameters' => array(
+                                array('type' => 'text', 'text' => (string) $otp)
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+        $lastResponse = null;
+        $lastCode = 0;
+
+        foreach ($payloadAttempts as $label => $payload) {
+            $ch = curl_init($endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ));
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+
+            $lastResponse = $response ?: $curlErr;
+            $lastCode = $httpCode;
+            $success = ($httpCode >= 200 && $httpCode < 300);
+
+            if ($success) {
+                // Log successful queue record
+                $queueData = array(
+                    'branch_id' => $branchID,
+                    'recipient' => $formatted,
+                    'template_name' => $templateName . " [$label]",
+                    'parameters' => json_encode(array($otp)),
+                    'api_url' => $apiUrl,
+                    'api_key' => $apiKey,
+                    'status' => 2,
+                    'response' => $response,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                );
+                $this->db->insert('whatsapp_queue', $queueData);
+
+                return array('status' => true, 'http_code' => $httpCode, 'response' => $response, 'method' => $label);
+            }
+        }
+
+        // If template messages encounter WABA 502 / proxy sync delay, dispatch via direct text message with exact approved text body
+        $exactBodyText = "*$otp* is your verification code. For your security, do not share this code.";
+        $directRes = $this->send_direct_text($apiUrl, $apiKey, $formatted, $exactBodyText, $branchID);
+        if ($directRes['status'] === true) {
+            return array(
+                'status' => true,
+                'http_code' => $directRes['http_code'],
+                'response' => $directRes['response'],
+                'method' => 'direct_text_fallback'
+            );
+        }
+
+        return array('status' => false, 'http_code' => $lastCode, 'response' => $lastResponse);
+    }
+
+    /**
+     * Send direct text WhatsApp message via WABA API
+     */
+    public function send_direct_text($apiUrl, $apiKey, $recipient, $message, $branchID = null)
+    {
+        $endpoint = rtrim($apiUrl, '/') . '/messages';
+        $payload = array(
+            'to' => $recipient,
+            'type' => 'text',
+            'text' => $message,
+            'content_text' => $message
+        );
+
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ));
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        $success = ($httpCode >= 200 && $httpCode < 300);
+        $status = $success ? 2 : 3;
+
+        $queueData = array(
+            'branch_id' => $branchID,
+            'recipient' => $recipient,
+            'template_name' => 'direct_text_otp',
+            'parameters' => json_encode(array($message)),
+            'api_url' => $apiUrl,
+            'api_key' => $apiKey,
+            'status' => $status,
+            'response' => $response ?: $curlErr,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        );
+        $this->db->insert('whatsapp_queue', $queueData);
+
+        return array('status' => $success, 'http_code' => $httpCode, 'response' => $response);
     }
 }

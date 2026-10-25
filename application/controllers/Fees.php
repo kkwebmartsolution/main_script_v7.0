@@ -1322,6 +1322,81 @@ class Fees extends Admin_Controller
         $this->load->view('layout/index', $this->data);
     }
 
+    /* Send SMS verification OTP for fee revert */
+    public function send_revert_otp()
+    {
+        if (!get_permission('fees_revert', 'is_delete')) {
+            $array = array('status' => 'error', 'message' => translate('access_denied'));
+            echo json_encode($array);
+            exit();
+        }
+
+        $enrollID = $this->input->post('enroll_id');
+        $paymentIDs = $this->input->post('payment_ids');
+
+        if (empty($paymentIDs) || !is_array($paymentIDs)) {
+            echo json_encode(array('status' => 'error', 'message' => 'Please select at least one fee payment to revert.'));
+            exit();
+        }
+
+        // Get basic details to find student branch
+        $basic = $this->fees_model->getInvoiceBasic($enrollID);
+        if (empty($basic)) {
+            echo json_encode(array('status' => 'error', 'message' => translate('no_information_found')));
+            exit();
+        }
+
+        $branchID = $basic['branch_id'];
+        $branch = $this->db->get_where('branch', array('id' => $branchID))->row_array();
+        if (empty($branch)) {
+            echo json_encode(array('status' => 'error', 'message' => 'School/Branch not found.'));
+            exit();
+        }
+
+        $adminMobile = !empty($branch['mobileno']) ? trim($branch['mobileno']) : '';
+        if (empty($adminMobile)) {
+            echo json_encode(array(
+                'status' => 'error',
+                'message' => 'Admin mobile number is not configured in School Settings for ' . $branch['school_name'] . '. Please update School Settings first.'
+            ));
+            exit();
+        }
+
+        $previousOtp = $this->session->userdata('fee_revert_otp');
+        if (!empty($previousOtp['sent_at']) && time() - $previousOtp['sent_at'] < 60) {
+            echo json_encode(array('status' => 'error', 'message' => 'Please wait 60 seconds before requesting another OTP.'));
+            exit();
+        }
+        // Invalidate the previous challenge before attempting a new delivery.
+        $this->session->unset_userdata('fee_revert_otp');
+        $otp = (string) random_int(100000, 999999);
+        $maskedMobile = '******' . substr(preg_replace('/[^0-9]/', '', $adminMobile), -4);
+        $this->load->library('fast2sms_otp');
+        $sendRes = $this->fast2sms_otp->send($adminMobile, $otp);
+        if ($sendRes['status'] === true) {
+            $this->session->set_userdata('fee_revert_otp', array(
+                'otp_hash' => hash('sha256', $otp),
+                'expires_at' => time() + 300,
+                'sent_at' => time(),
+                'attempts' => 0,
+                'branch_id' => $branchID,
+                'enroll_id' => $enrollID,
+                'payment_ids' => array_values(array_unique(array_map('strval', $paymentIDs))),
+            ));
+            $res = array(
+                'status' => 'success',
+                'message' => 'A 6-digit verification OTP has been sent via SMS to Admin mobile: +91 ' . $maskedMobile,
+                'masked_mobile' => $maskedMobile,
+                'branch_id' => $branchID
+            );
+        } else {
+            $res = array('status' => 'error', 'message' => $sendRes['message']);
+        }
+
+        echo json_encode($res);
+        exit();
+    }
+
     public function paymentRevert()
     {
         if (!get_permission('fees_revert', 'is_delete')) {
@@ -1329,37 +1404,71 @@ class Fees extends Admin_Controller
             echo json_encode($array);
             exit();
         }
-        $array = array('status' => 'success', 'message' => translate('information_deleted'));
+
+        // Check SMS OTP verification
+        $sessionOtp = $this->session->userdata('fee_revert_otp');
+        if (empty($sessionOtp) || empty($sessionOtp['otp_hash'])) {
+            $array = array('status' => 'error', 'message' => 'OTP verification is required. Please request an OTP before reverting fees.');
+            echo json_encode($array);
+            exit();
+        }
+
+        if (time() > $sessionOtp['expires_at']) {
+            $this->session->unset_userdata('fee_revert_otp');
+            $array = array('status' => 'error', 'message' => 'OTP has expired (valid for 5 minutes). Please click Resend OTP.');
+            echo json_encode($array);
+            exit();
+        }
+
         $ids = $this->input->post('id');
-        foreach ($ids as $key => $value) {
+        $selectedIDs = is_array($ids) ? array_values(array_unique(array_map('strval', $ids))) : array();
+        $authorizedIDs = $sessionOtp['payment_ids'];
+        sort($selectedIDs);
+        sort($authorizedIDs);
+        if (empty($selectedIDs) || $selectedIDs !== $authorizedIDs || (string) $this->input->post('enroll_id') !== (string) $sessionOtp['enroll_id']) {
+            echo json_encode(array('status' => 'error', 'message' => 'Payment selection has changed. Please request a new OTP for the selected payments.'));
+            exit();
+        }
+        $inputOtp = trim((string) $this->input->post('otp'));
+        if (!preg_match('/^[0-9]{6}$/', $inputOtp) || !hash_equals($sessionOtp['otp_hash'], hash('sha256', $inputOtp))) {
+            $sessionOtp['attempts']++;
+            if ($sessionOtp['attempts'] >= 5) {
+                $this->session->unset_userdata('fee_revert_otp');
+                $message = 'Too many incorrect attempts. Please request a new SMS OTP.';
+            } else {
+                $this->session->set_userdata('fee_revert_otp', $sessionOtp);
+                $message = 'Invalid OTP code. Please enter the correct 6-digit OTP sent via SMS to the admin mobile.';
+            }
+            echo json_encode(array('status' => 'error', 'message' => $message));
+            exit();
+        }
 
-            $feeDetails = $this->db->select('id,amount,fine')->where('id', $value)->get('fee_payment_history')->row();
-            if (!empty($feeDetails)) {
+        // Valid OTP -> clear session OTP
+        $this->session->unset_userdata('fee_revert_otp');
 
-                $amount = ($feeDetails->amount + $feeDetails->fine);
+        $array = array('status' => 'success', 'message' => translate('information_deleted'));
+        $ids = $selectedIDs;
+        if (!empty($ids) && is_array($ids)) {
+            foreach ($ids as $key => $value) {
 
-                $sql = "SELECT `transactions`.`account_id`, `transactions_links_details`.`transactions_id` FROM `transactions_links_details` INNER JOIN `transactions` ON `transactions`.`id` = `transactions_links_details`.`transactions_id` WHERE `transactions_links_details`.`payment_id` = " . $this->db->escape($value);
-                $transactionsDetails = $this->db->query($sql)->row();
-                if (!empty($transactionsDetails)) {
+                $feeDetails = $this->db->select('id,amount,fine')->where('id', $value)->get('fee_payment_history')->row();
+                if (!empty($feeDetails)) {
 
-                    $sql = "UPDATE `transactions` SET `amount` = `amount` - $amount, `cr` = `cr` - $amount, `bal` = `bal` - $amount WHERE `id` = " . $this->db->escape($transactionsDetails->transactions_id);
-                    $this->db->query($sql);
+                    $amount = ($feeDetails->amount + $feeDetails->fine);
 
-                    $sql = "UPDATE `accounts` SET `balance` = `balance` - $amount WHERE `id` = " . $this->db->escape($transactionsDetails->account_id);
-                    $this->db->query($sql);
+                    $sql = "SELECT `transactions`.`account_id`, `transactions_links_details`.`transactions_id` FROM `transactions_links_details` INNER JOIN `transactions` ON `transactions`.`id` = `transactions_links_details`.`transactions_id` WHERE `transactions_links_details`.`payment_id` = " . $this->db->escape($value);
+                    $transactionsDetails = $this->db->query($sql)->row();
+                    if (!empty($transactionsDetails)) {
 
-                    /*$this->db->set('amount', 'amount+' . $amount, false);
-                    $this->db->set('cr', 'cr-' . $amount, false);
-                    $this->db->set('bal', 'bal-' . $amount, false);
-                    $this->db->where('id', $transactionsDetails->transactions_id);
-                    $this->db->update('transactions');
+                        $sql = "UPDATE `transactions` SET `amount` = `amount` - $amount, `cr` = `cr` - $amount, `bal` = `bal` - $amount WHERE `id` = " . $this->db->escape($transactionsDetails->transactions_id);
+                        $this->db->query($sql);
 
-                    $this->db->set('balance', 'balance-' . $amount, false);
-                    $this->db->where('id', $transactionsDetails->account_id);
-                    $this->db->update('accounts');*/
+                        $sql = "UPDATE `accounts` SET `balance` = `balance` - $amount WHERE `id` = " . $this->db->escape($transactionsDetails->account_id);
+                        $this->db->query($sql);
+                    }
+                    $this->db->where('id', $value);
+                    $this->db->delete('fee_payment_history');
                 }
-                $this->db->where('id', $value);
-                $this->db->delete('fee_payment_history');
             }
         }
         echo json_encode($array);
