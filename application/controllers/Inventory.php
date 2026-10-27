@@ -960,7 +960,7 @@ if (is_superadmin_loggedin()) {
                         // action btn
                         $action = '<a href="javascript:void(0);" onclick="printSalesInvoice(' . $val->id . ', this)" class="btn btn-circle icon btn-default" data-toggle="tooltip" data-original-title="' . translate('print') . '"> <i class="fas fa-print"></i></a>';
                         $action .= '<a href="' . base_url('inventory/sales_invoice/' . $val->id) . '" class="btn btn-circle icon btn-default" data-toggle="tooltip" data-original-title="' . translate('bill_view') . '"> <i class="fas fa-credit-card"></i></a>';
-                        if (get_permission('product_sales', 'is_delete')){
+                        if ($val->bill_count == 1 && get_permission('product_sales', 'is_delete')){
                             $action .= btn_delete('inventory/sales_delete/' . $val->id);
                         }
                         // dt-data array 
@@ -968,10 +968,10 @@ if (is_superadmin_loggedin()) {
 if (is_superadmin_loggedin()) {
                         $row[] = get_type_name_by_id('branch', $val->branch_id);
 }
-                        $row[] = $val->bill_no;
+                        $row[] = html_escape($val->bill_no);
                         $row[] = !empty($val->role_name) ? $val->role_name : translate('customer');
                         $cust_name = !empty($val->customer_name) ? $val->customer_name : (!empty($val->role_id) && !empty($val->user_id) ? $this->application_model->getUserNameByRoleID($val->role_id, $val->user_id)['name'] : 'Walk-in Customer');
-                        $row[] = $cust_name;
+                        $row[] = html_escape(!empty($val->student_name) && empty($val->customer_name) ? $val->student_name : $cust_name);
                         $row[] = "<span class='label " . $labelMode. "'>" . $status . "</span>";
                         $row[] = _d($val->date);
                         $row[] = currencyFormat($val->total - $val->discount);
@@ -1095,7 +1095,7 @@ if (is_superadmin_loggedin()) {
         if (!get_permission('product_sales', 'is_view')) {
             access_denied();
         }
-        $this->data['billdata'] = $this->inventory_model->getSalesInvoice($id);
+        $this->data = array_merge($this->data, $this->inventory_model->getSalesAccount($id));
         if (empty($this->data['billdata'])) {
             access_denied();
         }
@@ -1123,12 +1123,11 @@ if (is_superadmin_loggedin()) {
         if (empty($id)) {
             $id = $this->input->post('id');
         }
-        $this->data['billdata'] = $this->inventory_model->getSalesInvoice($id);
+        $this->data = array_merge($this->data, $this->inventory_model->getSalesAccount($id));
         if (empty($this->data['billdata'])) {
             echo '<div class="alert alert-danger">' . translate('no_information_available') . '</div>';
             return;
         }
-        $this->data['productlist'] = $this->inventory_model->get('sales_bill_details', array('sales_bill_id' => $id));
         $this->load->view('inventory/sales_invoice_print', $this->data);
     }
 
@@ -1140,7 +1139,11 @@ if (is_superadmin_loggedin()) {
         }
         if ($this->input->post()) {
             $data = $this->input->post();
-            $data['getbill'] = $this->db->select('id,due')->where('id', $data['sales_bill_id'])->get('sales_bill')->row_array();
+            $data['getbill'] = $this->inventory_model->getSalesInvoice($data['sales_bill_id']);
+            if (empty($data['getbill'])) {
+                ajax_access_denied();
+                return;
+            }
             $this->form_validation->set_rules('paid_date', 'Paid Date', 'trim|required');
             $this->form_validation->set_rules('payment_amount', 'Payment Amount', 'trim|required|numeric|greater_than[1]|callback_sales_amount_validation');
             $this->form_validation->set_rules('pay_via', 'Pay Via', 'trim|required');
@@ -1164,7 +1167,8 @@ if (is_superadmin_loggedin()) {
     public function sales_amount_validation($amount)
     {
         $bill_id = $this->input->post('sales_bill_id');
-        $due_amount = $this->db->select('due')->where('id', $bill_id)->get('sales_bill')->row()->due;
+        $bill = $this->inventory_model->getSalesInvoice($bill_id);
+        $due_amount = empty($bill) ? 0 : $bill['due'];
         if ($amount <= $due_amount) {
             return true;
         } else {

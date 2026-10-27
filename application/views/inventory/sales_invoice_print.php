@@ -203,12 +203,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 					<?php endif; ?>
 					<?php 
 					$net_amount = $total_amount - $total_discount;
-					if ($status == 3): ?>
-					<li>
-						<strong><?php echo translate('grand_total'); ?> : </strong> 
-						<strong><?php echo currencyFormat($net_amount); ?></strong>
-					</li>
-					<?php else: ?>
+                    ?>
 					<li>
 						<strong><?php echo translate('grand_total'); ?> : </strong> 
 						<strong><?php echo currencyFormat($net_amount); ?></strong>
@@ -218,7 +213,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 						<strong style="color:#dc2626;"><?php echo translate('due'); ?> : </strong> 
 						<strong style="color:#dc2626;"><?php echo currencyFormat($due_amount); ?></strong>
 					</li>
-					<?php endif; ?>
+
 				</ul>
 			</div>
 		</div>

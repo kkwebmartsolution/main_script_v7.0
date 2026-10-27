@@ -411,17 +411,31 @@ class Inventory_model extends MY_Model
 
     public function getSalesListDT()
     {
-        $this->datatables->select('sales_bill.*,roles.name as role_name');
-        $this->datatables->from('sales_bill');
+        $this->datatables->select('sales_bill.*,roles.name as role_name,sales_student.full_name as student_name');
+        // Aggregate before DataTables filters/counts/paginates, keeping other customers separate.
+        $grouped = "(SELECT MIN(id) AS id, branch_id, role_id, user_id,
+            GROUP_CONCAT(bill_no ORDER BY id SEPARATOR ', ') AS bill_no,
+            MAX(customer_name) AS customer_name, MAX(customer_phone) AS customer_phone,
+            GROUP_CONCAT(NULLIF(remarks, '') ORDER BY id SEPARATOR '; ') AS remarks,
+            MAX(date) AS date, SUM(total) AS total, SUM(discount) AS discount,
+            SUM(paid) AS paid, SUM(due) AS due, COUNT(*) AS bill_count,
+            CASE WHEN SUM(due) <= 0 THEN 3 WHEN SUM(paid) > 0 THEN 2 ELSE 1 END AS payment_status
+            FROM sales_bill GROUP BY branch_id, role_id, user_id,
+            CASE WHEN role_id = 7 AND user_id > 0 THEN 0 ELSE id END) AS sales_bill";
+        $this->datatables->from($grouped);
         $this->datatables->join('roles', 'roles.id = sales_bill.role_id', 'left');
+        // Legacy bills may have no customer_name; search the linked student as well.
+        // Join by student ID only to avoid multiplying sales across enrollment sessions.
+        $this->datatables->join("(SELECT id, TRIM(CONCAT_WS(' ', NULLIF(TRIM(first_name), ''), NULLIF(TRIM(last_name), ''))) AS full_name FROM student) AS sales_student",
+            'sales_student.id = sales_bill.user_id AND sales_bill.role_id = 7', 'left');
         if (!is_superadmin_loggedin()) {
             $this->datatables->where('sales_bill.branch_id', get_loggedin_branch_id());
             $column_order = '';
         } else {
             $column_order = 'sales_bill.branch_id,';
         }
-        $this->datatables->search_value('sales_bill.bill_no,roles.name,sales_bill.date,sales_bill.total,sales_bill.remarks');
-        $this->datatables->column_order($column_order.'sales_bill.bill_no,roles.name,sales_bill.user_id,sales_bill.user_id,sales_bill.payment_status,sales_bill.date,sales_bill.total,sales_bill.paid,sales_bill.due');
+        $this->datatables->search_value('sales_bill.bill_no,roles.name,sales_bill.customer_name,sales_student.full_name,sales_bill.date,sales_bill.total,sales_bill.remarks');
+        $this->datatables->column_order($column_order.'sales_bill.bill_no,roles.name,sales_bill.customer_name,sales_bill.payment_status,sales_bill.date,sales_bill.total - sales_bill.discount,sales_bill.paid,sales_bill.due,sales_bill.remarks');
         $this->datatables->order_by('sales_bill.id', 'asc');
         $results = $this->datatables->generate();
         return $results;
@@ -441,6 +455,34 @@ class Inventory_model extends MY_Model
         return $this->db->get()->row_array();
     }
 
+
+    // Resolve the account from an authorized bill; never group by a customer's name.
+    public function getSalesAccount($id)
+    {
+        $bill = $this->getSalesInvoice($id);
+        if (empty($bill)) {
+            return array();
+        }
+        if ($bill['role_id'] == 7 && $bill['user_id'] > 0) {
+            $bills = $this->db->where('branch_id', $bill['branch_id'])
+                ->where('role_id', 7)->where('user_id', $bill['user_id'])
+                ->order_by('date', 'asc')->order_by('id', 'asc')->get('sales_bill')->result_array();
+        } else {
+            $bills = array($bill);
+        }
+        $ids = array_column($bills, 'id');
+        foreach (array('total', 'discount', 'paid', 'due') as $field) {
+            $bill[$field] = array_sum(array_column($bills, $field));
+        }
+        $bill['bill_no'] = implode(', ', array_column($bills, 'bill_no'));
+        $bill['payment_status'] = $bill['due'] <= 0 ? 3 : ($bill['paid'] > 0 ? 2 : 1);
+        return array(
+            'billdata' => $bill,
+            'account_bills' => $bills,
+            'productlist' => $this->db->where_in('sales_bill_id', $ids)->order_by('id', 'asc')->get('sales_bill_details')->result_array(),
+            'paymentlist' => $this->db->where_in('sales_bill_id', $ids)->order_by('paid_on', 'asc')->order_by('id', 'asc')->get('sales_payment_history')->result_array(),
+        );
+    }
 
     // add partly of the sales payment
     public function save_sales_payment($data)

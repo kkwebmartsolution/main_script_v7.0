@@ -32,7 +32,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 			<li class="<?php echo (empty($active_tab) || $active_tab == 1 ? 'active' : ''); ?>">
 				<a href="#invoice" data-toggle="tab"><i class="far fa-credit-card"></i> <?php echo translate('invoice'); ?></a>
 			</li>
-<?php if($total_paid > 1 && get_permission('sales_payment', 'is_view')):?>
+<?php if($total_paid > 0 && get_permission('sales_payment', 'is_view')):?>
 			<li class="<?php echo ($active_tab == 2 ? 'active' : ''); ?>">
 				<a href="#payment_history" data-toggle="tab"><i class="fas fa-dollar-sign"></i> <?php echo translate('payment_history'); ?></a>
 			</li>
@@ -121,7 +121,25 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 							</div>
 						</div>
 
-						<div class="table-responsive">
+						<?php if (count($account_bills) > 1): ?>
+                        <h4>Student Sales Summary</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead><tr><th><?php echo translate('bill_no'); ?></th><th><?php echo translate('date'); ?></th><th><?php echo translate('total'); ?></th><th><?php echo translate('paid_amount'); ?></th><th><?php echo translate('due'); ?></th><th class="hidden-print"><?php echo translate('action'); ?></th></tr></thead>
+                                <tbody><?php foreach ($account_bills as $account_bill): ?>
+                                    <tr>
+                                        <td><?php echo html_escape($account_bill['bill_no']); ?></td>
+                                        <td><?php echo _d($account_bill['date']); ?></td>
+                                        <td><?php echo currencyFormat($account_bill['total'] - $account_bill['discount']); ?></td>
+                                        <td><?php echo currencyFormat($account_bill['paid']); ?></td>
+                                        <td><?php echo currencyFormat($account_bill['due']); ?></td>
+                                        <td class="hidden-print"><?php if (get_permission('product_sales', 'is_delete')) echo btn_delete('inventory/sales_delete/' . (int)$account_bill['id']); ?></td>
+                                    </tr>
+                                <?php endforeach; ?></tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                        <div class="table-responsive">
 							<table class="table invoice-items table-hover mb-none">
 								<thead>
 									<tr class="text-dark">
@@ -136,7 +154,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 								<tbody>
 									<?php
 										$count = 1;
-										$productlist = $this->inventory_model->get('sales_bill_details', array('sales_bill_id' => $billdata['id']));
+										// All items from the student's account are supplied by the controller.
 										foreach ($productlist as $product) {
 											$sub_total = $product['sub_total'];
 											$discount = $product['discount'];
@@ -159,26 +177,10 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 									<ul class="amounts">
 										<li><?php echo translate("sub") . " " . translate('total'); ?> : <?php echo currencyFormat($total_amount); ?></li>
 										<li><?php echo translate('discount'); ?> : <?php echo currencyFormat($total_discount); ?></li>
-<?php if ($status == 3){ 
-	$g = ($total_amount - $total_discount);
-	$grandtotal = number_format($g, 2, '.', '') ?>
-										<li>
-											<strong><?php echo translate('grand') . " " . translate('total'); ?>  : </strong> 
-											<?php
-											$f = new NumberFormatter("en", NumberFormatter::SPELLOUT);
-											echo currencyFormat($grandtotal) . " </br>( ". ucwords($f->format($grandtotal)) . " $currency )";
-											?>
-										</li>
-<?php }else{ ?>
-										<li><?php echo translate('paid_amount'); ?> : <?php echo currencyFormat($total_paid); ?></li>
-										<li>
-											<strong><?php echo translate('due'); ?> :</strong> 
-											<?php
-											$f = new NumberFormatter("en", NumberFormatter::SPELLOUT);
-											echo currencyFormat($due_amount) . ' </br>( ' . ucwords($f->format($due_amount)) . ' )';
-											?>
-										</li>
-<?php } ?>
+<li><?php echo translate('grand_total'); ?> : <?php echo currencyFormat($total_amount - $total_discount); ?></li>
+<li><?php echo translate('paid_amount'); ?> : <?php echo currencyFormat($total_paid); ?></li>
+<li><strong><?php echo translate('due'); ?> : <?php echo currencyFormat($due_amount); ?></strong></li>
+
 									</ul>
 								</div>
 							</div>
@@ -201,7 +203,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 					</div>
 				</div>
 			</div>
-<?php if($total_paid > 1 && get_permission('sales_payment', 'is_view')): ?>
+<?php if($total_paid > 0 && get_permission('sales_payment', 'is_view')): ?>
 			<div class="tab-pane <?php echo ($active_tab == 2 ? 'active' : ''); ?>" id="payment_history">
 				<div id="payment_print">
 					<div class="invoice">
@@ -295,7 +297,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 								<tbody>
 									<?php
 										$count = 1;
-										$paymentlist = $this->inventory_model->get('sales_payment_history', array('sales_bill_id' => $billdata['id']));
+										// Payment history includes every bill in this account.
 										foreach($paymentlist as $payment) {
 									?>
 									<tr>
@@ -340,7 +342,18 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 			<!-- add payment form -->
 			<div id="add_payment" class="tab-pane <?php echo ($active_tab == 3 ? 'active' : ''); ?>">
 				<?php echo form_open_multipart('inventory/add_sales_payment', array('class' => 'form-horizontal form-bordered frm-submit-data')); ?>
-					<input type="hidden" name="sales_bill_id" value="<?php echo html_escape($billdata['id']); ?>">
+					<div class="form-group">
+                        <label class="col-md-3 control-label"><?php echo translate('bill_no'); ?> <span class="required">*</span></label>
+                        <div class="col-md-6">
+                            <select name="sales_bill_id" class="form-control" id="account-payment-bill">
+                                <?php $first_due = null; foreach ($account_bills as $account_bill): if ($account_bill['due'] <= 0) continue;
+                                    if ($first_due === null) $first_due = $account_bill['due']; ?>
+                                <option value="<?php echo (int)$account_bill['id']; ?>" data-due="<?php echo html_escape($account_bill['due']); ?>"><?php echo html_escape($account_bill['bill_no'] . ' ? ' . translate('due') . ': ' . currencyFormat($account_bill['due'])); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="error"></span>
+                        </div>
+                    </div>
 					<div class="form-group">
 						<label class="col-md-3 control-label"><?php echo translate('paid_on'); ?> <span class="required">*</span></label>
 						<div class="col-md-6">
@@ -351,7 +364,7 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 					<div class="form-group">
 						<label class="col-md-3 control-label"><?php echo translate('amount'); ?> <span class="required">*</span></label>
 						<div class="col-md-6">
-							<input type="number" class="form-control" name="payment_amount" value="<?php echo set_value('payment_amount', $due_amount); ?>"
+							<input type="number" class="form-control" name="payment_amount" value="<?php echo set_value('payment_amount', $first_due); ?>"
 							placeholder="<?php echo translate('enter_payment_amount'); ?>" />
 							<span class="error"></span>
 						</div>
@@ -391,3 +404,10 @@ if (empty($billdata['school_name']) && !empty($billdata['branch_id'])) {
 		</div>
 	</div>
 </section>
+<script>
+$(function () {
+    $('#account-payment-bill').on('change', function () {
+        $(this).closest('form').find('[name="payment_amount"]').val($(this).find(':selected').attr('data-due'));
+    });
+});
+</script>
