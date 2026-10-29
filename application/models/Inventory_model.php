@@ -418,7 +418,6 @@ class Inventory_model extends MY_Model
             MAX(customer_name) AS customer_name, MAX(customer_phone) AS customer_phone,
             GROUP_CONCAT(NULLIF(remarks, '') ORDER BY id SEPARATOR '; ') AS remarks,
             MAX(date) AS date, SUM(total) AS total, SUM(discount) AS discount,
-            SUM(total - discount) AS net_payable,
             SUM(paid) AS paid, SUM(due) AS due, COUNT(*) AS bill_count,
             CASE WHEN SUM(due) <= 0 THEN 3 WHEN SUM(paid) > 0 THEN 2 ELSE 1 END AS payment_status
             FROM sales_bill GROUP BY branch_id, role_id, user_id,
@@ -440,6 +439,30 @@ class Inventory_model extends MY_Model
         $this->datatables->order_by('sales_bill.id', 'asc');
         $results = $this->datatables->generate();
         return $results;
+    }
+
+    // Creates the sales_bill_account view (student-bill aggregation) if missing.
+    private function ensureSalesAccountView()
+    {
+        static $ensured = false;
+        if ($ensured) {
+            return;
+        }
+        $ensured = true;
+        $exists = $this->db->query("SELECT 1 FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sales_bill_account'")->num_rows();
+        if (!$exists) {
+            $this->db->query("CREATE VIEW sales_bill_account AS
+                SELECT MIN(id) AS id, branch_id, role_id, user_id,
+                    GROUP_CONCAT(bill_no ORDER BY id SEPARATOR ', ') AS bill_no,
+                    MAX(customer_name) AS customer_name, MAX(customer_phone) AS customer_phone,
+                    GROUP_CONCAT(NULLIF(remarks, '') ORDER BY id SEPARATOR '; ') AS remarks,
+                    MAX(date) AS date, SUM(total) AS total, SUM(discount) AS discount,
+                    SUM(paid) AS paid, SUM(due) AS due, COUNT(*) AS bill_count,
+                    CASE WHEN SUM(due) <= 0 THEN 3 WHEN SUM(paid) > 0 THEN 2 ELSE 1 END AS payment_status
+                FROM sales_bill
+                GROUP BY branch_id, role_id, user_id,
+                    CASE WHEN role_id = 7 AND user_id > 0 THEN 0 ELSE id END");
+        }
     }
 
     public function getSalesInvoice($id)
