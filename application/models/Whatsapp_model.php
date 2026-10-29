@@ -223,7 +223,7 @@ class Whatsapp_model extends CI_Model
     /**
      * Direct robust WABA API send with database queue logging
      */
-    public function send_direct($apiUrl, $apiKey, $recipient, $templateName, $parameters, $branchID = null)
+    public function send_direct($apiUrl, $apiKey, $recipient, $templateName, $parameters, $branchID = null, $language = 'en')
     {
         // 1. Insert into queue with status 0
         $data = array(
@@ -261,7 +261,7 @@ class Whatsapp_model extends CI_Model
             'template' => array(
                 'name' => $templateName,
                 'language' => array(
-                    'code' => 'en'
+                    'code' => $language
                 ),
                 'components' => array(
                     array(
@@ -271,6 +271,8 @@ class Whatsapp_model extends CI_Model
                 )
             )
         );
+
+        if (!$paramComponents) unset($payload['template']['components']);
 
         $ch = curl_init($endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

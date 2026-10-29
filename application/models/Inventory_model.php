@@ -418,6 +418,7 @@ class Inventory_model extends MY_Model
             MAX(customer_name) AS customer_name, MAX(customer_phone) AS customer_phone,
             GROUP_CONCAT(NULLIF(remarks, '') ORDER BY id SEPARATOR '; ') AS remarks,
             MAX(date) AS date, SUM(total) AS total, SUM(discount) AS discount,
+            SUM(total - discount) AS net_payable,
             SUM(paid) AS paid, SUM(due) AS due, COUNT(*) AS bill_count,
             CASE WHEN SUM(due) <= 0 THEN 3 WHEN SUM(paid) > 0 THEN 2 ELSE 1 END AS payment_status
             FROM sales_bill GROUP BY branch_id, role_id, user_id,
@@ -435,7 +436,7 @@ class Inventory_model extends MY_Model
             $column_order = 'sales_bill.branch_id,';
         }
         $this->datatables->search_value('sales_bill.bill_no,roles.name,sales_bill.customer_name,sales_student.full_name,sales_bill.date,sales_bill.total,sales_bill.remarks');
-        $this->datatables->column_order($column_order.'sales_bill.bill_no,roles.name,sales_bill.customer_name,sales_bill.payment_status,sales_bill.date,sales_bill.total - sales_bill.discount,sales_bill.paid,sales_bill.due,sales_bill.remarks');
+        $this->datatables->column_order($column_order.'sales_bill.bill_no,roles.name,sales_bill.customer_name,sales_bill.payment_status,sales_bill.date,sales_bill.net_payable,sales_bill.paid,sales_bill.due,sales_bill.remarks');
         $this->datatables->order_by('sales_bill.id', 'asc');
         $results = $this->datatables->generate();
         return $results;

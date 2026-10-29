@@ -1638,6 +1638,11 @@
                                 </a>
                                 <ul class="nav nav-children">
                                     <?php if (get_permission('sendsmsmail', 'is_add')) { ?>
+                                        <li class="<?php if ($sub_page == 'sendsmsmail/whatsapp') echo 'nav-active'; ?>">
+                                            <a href="<?= base_url('sendsmsmail/whatsapp') ?>">
+                                                <span><i class="fab fa-whatsapp"></i> WhatsApp Template</span>
+                                            </a>
+                                        </li>
                                         <li class="<?php if ($sub_page == 'sendsmsmail/sms' || $sub_page == 'sendsmsmail/email')
                                             echo 'nav-active'; ?>">
                                             <a href="<?= base_url('sendsmsmail/sms') ?>">

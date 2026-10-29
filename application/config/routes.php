@@ -106,6 +106,10 @@ $route['(:any)/event_view/(:num)'] = 'home/event_view/$2';
 $route['(:any)/news_view/(:any)'] = 'home/news_view/$2';
 
 $route['dashboard'] = 'dashboard/index';
+// Keep WhatsApp broadcasts in the admin area, ahead of the public-page catch-all.
+$route['sendsmsmail/whatsapp'] = 'whatsapp_broadcast/index';
+$route['sendsmsmail/whatsapp_action'] = 'whatsapp_broadcast/action';
+$route['whatsapp_broadcast'] = 'whatsapp_broadcast/index';
 $route['branch'] = 'branch/index';
 $route['attachments'] = 'attachments/index';
 $route['homework'] = 'homework/index';
