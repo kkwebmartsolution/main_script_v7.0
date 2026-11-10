@@ -22,6 +22,94 @@ class Attendance_model extends MY_Model
         return $this->db->query($sql)->result_array();
     }
 
+    /**
+     * Get approved staff leaves indexed by [staff_id][Y-m-d] for a given month.
+     */
+    public function getStaffApprovedLeavesByMonth($branchID = '', $year = '', $month = '')
+    {
+        $monthStart = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $monthEnd = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $this->db->select('la.user_id, la.start_date, la.end_date, la.reason, lc.name as category_name');
+        $this->db->from('leave_application as la');
+        $this->db->join('leave_category as lc', 'lc.id = la.category_id', 'left');
+        $this->db->where('la.status', 2);
+        $this->db->where_not_in('la.role_id', array(6, 7));
+        if (!empty($branchID)) {
+            $this->db->where('la.branch_id', $branchID);
+        }
+        $this->db->where('la.start_date <=', $monthEnd);
+        $this->db->where('la.end_date >=', $monthStart);
+        $leaves = $this->db->get()->result_array();
+
+        $leaveMap = array();
+        $monthStartTs = strtotime($monthStart);
+        $monthEndTs = strtotime($monthEnd);
+        foreach ($leaves as $leave) {
+            $start = max(strtotime($leave['start_date']), $monthStartTs);
+            $end = min(strtotime($leave['end_date']), $monthEndTs);
+            for ($ts = $start; $ts <= $end; $ts = strtotime('+1 day', $ts)) {
+                $dateKey = date('Y-m-d', $ts);
+                $leaveMap[$leave['user_id']][$dateKey] = array(
+                    'category_name' => $leave['category_name'],
+                    'reason' => $leave['reason'],
+                );
+            }
+        }
+        return $leaveMap;
+    }
+
+    /**
+     * Get approved staff leaves indexed by [staff_id] for a specific date.
+     */
+    public function getStaffApprovedLeavesByDate($branchID = '', $date = '')
+    {
+        $this->db->select('la.user_id, la.reason, lc.name as category_name');
+        $this->db->from('leave_application as la');
+        $this->db->join('leave_category as lc', 'lc.id = la.category_id', 'left');
+        $this->db->where('la.status', 2);
+        $this->db->where_not_in('la.role_id', array(6, 7));
+        if (!empty($branchID)) {
+            $this->db->where('la.branch_id', $branchID);
+        }
+        $this->db->where('la.start_date <=', $date);
+        $this->db->where('la.end_date >=', $date);
+        $leaves = $this->db->get()->result_array();
+
+        $leaveMap = array();
+        foreach ($leaves as $leave) {
+            $leaveMap[$leave['user_id']] = array(
+                'category_name' => $leave['category_name'],
+                'reason' => $leave['reason'],
+            );
+        }
+        return $leaveMap;
+    }
+
+    /**
+     * Get staff attendance records indexed by [staff_id][Y-m-d] for a given month.
+     */
+    public function getStaffAttendanceByMonth($branchID = '', $year = '', $month = '')
+    {
+        $monthStart = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $monthEnd = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $this->db->select('staff_id, date, status, remark');
+        $this->db->from('staff_attendance');
+        if (!empty($branchID)) {
+            $this->db->where('branch_id', $branchID);
+        }
+        $this->db->where('date >=', $monthStart);
+        $this->db->where('date <=', $monthEnd);
+        $rows = $this->db->get()->result_array();
+
+        $attendanceMap = array();
+        foreach ($rows as $row) {
+            $attendanceMap[$row['staff_id']][$row['date']] = $row;
+        }
+        return $attendanceMap;
+    }
+
     public function getExamAttendence($classID, $sectionID, $examID, $subjectID, $branchID)
     {
         $sql = "SELECT enroll.student_id,enroll.roll,student.first_name,student.last_name,student.register_no,exam_attendance.id as `atten_id`, exam_attendance.status as `att_status`,exam_attendance.remark as `att_remark` FROM `enroll` LEFT JOIN student ON student.id = enroll.student_id LEFT JOIN exam_attendance ON exam_attendance.student_id = student.id AND exam_attendance.exam_id = " . $this->db->escape($examID) . " AND exam_attendance.subject_id = " . $this->db->escape($subjectID) . " WHERE enroll.class_id = " . $this->db->escape($classID) . " AND enroll.section_id = " . $this->db->escape($sectionID) . " AND enroll.branch_id = " . $this->db->escape($branchID) . " AND enroll.session_id = " . $this->db->escape(get_session_id());

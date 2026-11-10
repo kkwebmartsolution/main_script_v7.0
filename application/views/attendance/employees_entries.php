@@ -112,7 +112,16 @@
 											<input type="hidden" name="attendance[<?=$key?>][staff_id]" value="<?=$row['id']?>">
 											<td><?php echo $count++; ?></td>
 											<td class="center"><img class="rounded" src="<?php echo get_image_url('staff', $row['photo']); ?>" width="40" height="40" /></td>
-											<td><?php echo $row['name']; ?></td>
+											<td><?php
+												echo $row['name'];
+												if (!empty($staff_leaves[$row['id']])) {
+													$leaveBadge = translate('on_leave');
+													if (!empty($staff_leaves[$row['id']]['category_name'])) {
+														$leaveBadge .= ' : ' . $staff_leaves[$row['id']]['category_name'];
+													}
+													echo '<br><span class="label label-warning-custom text-xs">' . html_escape($leaveBadge) . '</span>';
+												}
+											?></td>
 											<td><?php echo $row['staff_id']; ?></td>
 											<td>
 												<div class="radio-custom radio-success radio-inline mt-xs">

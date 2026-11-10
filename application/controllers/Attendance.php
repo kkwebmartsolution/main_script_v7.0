@@ -131,12 +131,14 @@ class Attendance extends Admin_Controller
                 $date = $this->input->post('date');
                 $this->data['date'] = $date;
                 $this->data['attendencelist'] = $this->attendance_model->getStaffAttendence($roleID, $date, $branchID);
+                $this->data['staff_leaves'] = $this->attendance_model->getStaffApprovedLeavesByDate($branchID, $date);
             }
         }
         $this->data['getWeekends'] = $this->application_model->getWeekends($branchID);
         if (isset($_POST['save'])) {
             $attendance = $this->input->post('attendance');
             $date = $this->input->post('date');
+            $staffLeaves = $this->attendance_model->getStaffApprovedLeavesByDate($branchID, $date);
             foreach ($attendance as $key => $value) {
                 $attStatus = (isset($value['status']) ? $value['status'] : "");
                 $arrayAttendance = array(
@@ -152,8 +154,8 @@ class Attendance extends Admin_Controller
                     $this->db->where('id', $value['attendance_id']);
                     $this->db->update('staff_attendance', array('status' => $attStatus, 'remark' => $value['remark']));
                 }
-                // send student absent then sms
-                if ($attStatus == 'A') {
+                // send absent sms only if staff is not on approved leave
+                if ($attStatus == 'A' && empty($staffLeaves[$value['staff_id']])) {
                     $this->sms_model->send_sms($arrayAttendance, 3);
                 }
             }
@@ -350,6 +352,8 @@ class Attendance extends Admin_Controller
             $this->data['year'] = date('Y', strtotime($this->input->post('timestamp')));
             $this->data['days'] = date('t', strtotime($this->data['year'] . "-" . $this->data['month']));
             $this->data['stafflist'] = $this->attendance_model->getStaffList($this->data['branch_id'], $this->data['role_id']);
+            $this->data['attendance_map'] = $this->attendance_model->getStaffAttendanceByMonth($this->data['branch_id'], $this->data['year'], $this->data['month']);
+            $this->data['staff_leaves'] = $this->attendance_model->getStaffApprovedLeavesByMonth($this->data['branch_id'], $this->data['year'], $this->data['month']);
         }
         $this->data['title'] = translate('employee_attendance');
         $this->data['sub_page'] = 'attendance/employees_report';

@@ -65,13 +65,14 @@
 				}
 			</style>
 			<div class="row mt-sm">
-				<div class="col-md-offset-8 col-md-4">
+				<div class="col-md-offset-6 col-md-6">
 					<table class="table table-condensed table-bordered text-dark text-center">
 						<tbody>
 							<tr>
 								<td><strong>Weekends :</strong> W<span class="visible-print">W</span></td>
 								<td><strong>Present :</strong> <i class="far fa-check-circle hidden-print text-success"></i><span class="visible-print">P</span></td>
 								<td><strong>Absent : </strong> <i class="far fa-times-circle hidden-print text-danger"></i><span class="visible-print">A</span></td>
+								<td><strong><?=translate('leave')?> : </strong> <i class="far fa-calendar-minus hidden-print text-warning"></i><span class="visible-print">LV</span></td>
 								<td><strong>Holiday : </strong> <i class="fas fa-hospital-symbol hidden-print text-info"></i><span class="visible-print">H</span></td>
 								<td><strong>Late : </strong> <i class="far fa-clock hidden-print text-tertiary"></i><span class="visible-print">L</span></td>
 								<td><strong>Half Day : </strong> <i class="fas fa-star-half-alt text-tertiary"></i><span class="visible-print">HD</span></td>
@@ -92,6 +93,12 @@
 $weekends = $this->attendance_model->getWeekendDaysSession($branch_id);
 $getHolidays = $this->attendance_model->getHolidays($branch_id);
 $getHolidays = explode('","', $getHolidays);
+if (!isset($attendance_map)) {
+	$attendance_map = $this->attendance_model->getStaffAttendanceByMonth($branch_id, $year, $month);
+}
+if (!isset($staff_leaves)) {
+	$staff_leaves = $this->attendance_model->getStaffApprovedLeavesByMonth($branch_id, $year, $month);
+}
 
 for($i = 1; $i <= $days; $i++){
 $date = date('Y-m-d', strtotime($year . '-' . $month . '-' . $i));
@@ -102,6 +109,7 @@ $date = date('Y-m-d', strtotime($year . '-' . $month . '-' . $i));
 								<th class="text-center" style="padding-right: 15px !important;">W</th>
 								<th class="text-center text-success" style="padding-right: 15px !important;">P</th>
 								<th class="text-center text-danger" style="padding-right: 15px !important;">A</th>
+								<th class="text-center text-warning" style="padding-right: 15px !important;">LV</th>
 								<th class="text-center text-tertiary" style="padding-right: 15px !important;">L</th>
 								<th class="text-center text-tertiary isExport">HD</th>
 							</tr>
@@ -116,44 +124,69 @@ $date = date('Y-m-d', strtotime($year . '-' . $month . '-' . $i));
 								<?php
 									$total_present = 0;
 									$total_absent = 0;
+									$total_leave = 0;
 									$total_late = 0;
 									$total_weekends = 0;
 									$total_half_day = 0;
 									for ($i = 1; $i <= $days; $i++) {
 										$date = date('Y-m-d', strtotime($year . '-' . $month . '-' . $i));
-										$getAttendance = $this->db->get_where('staff_attendance', array('staff_id' => $staffID,'date' => $date))->row_array();
+										$getAttendance = isset($attendance_map[$staffID][$date]) ? $attendance_map[$staffID][$date] : array();
+										$leaveInfo = isset($staff_leaves[$staffID][$date]) ? $staff_leaves[$staffID][$date] : array();
+										$status = !empty($getAttendance['status']) ? $getAttendance['status'] : '';
+										$remark = !empty($getAttendance['remark']) ? $getAttendance['remark'] : '';
+										$showLeave = false;
+
 										echo '<td class="center">';
-										if (!empty($getAttendance)) {
-											$status = $getAttendance['status'];
-											echo '<span data-toggle="popover" data-placement="top" data-trigger="hover" data-content="' . $getAttendance['remark'] . '">';
-											if ($status == 'P'){
-												$total_present++;
-												echo '<i class="far fa-check-circle hidden-print text-success"></i><span class="visible-print">P</span>';
+										if (!empty($status) && $status != '0') {
+											if ($status == 'A' && !empty($leaveInfo)) {
+												$showLeave = true;
+											} else {
+												echo '<span data-toggle="popover" data-placement="top" data-trigger="hover" data-content="' . html_escape($remark) . '">';
+												if ($status == 'P'){
+													$total_present++;
+													echo '<i class="far fa-check-circle hidden-print text-success"></i><span class="visible-print">P</span>';
+												}
+												if($status == 'A'){
+													$total_absent++;
+													echo '<i class="far fa-times-circle hidden-print text-danger"></i><span class="visible-print">A</span>';
+												}
+												if($status == 'H')
+													echo '<i class="fas fa-hospital-symbol hidden-print text-info"></i><span class="visible-print">H</span>';
+												if($status == 'L'){
+													$total_late++;
+													echo '<i class="far fa-clock hidden-print text-tertiary"></i><span class="visible-print">L</span>';
+												}
+												if($status == 'HD'){
+													$total_half_day++;
+													echo '<i class="fas fa-star-half-alt hidden-print text-tertiary"></i><span class="visible-print">HD</span>';
+												}
+												echo '</span>';
 											}
-											if($status == 'A'){
-												$total_absent++;
-												echo '<i class="far fa-times-circle hidden-print text-danger"></i><span class="visible-print">A</span>';
-											}
-											if($status == 'H')
-												echo '<i class="fas fa-hospital-symbol hidden-print text-info"></i><span class="visible-print">H</span>';
-											if($status == 'L'){
-												$total_late++;
-												echo '<i class="far fa-clock hidden-print text-tertiary"></i><span class="visible-print">L</span>';
-											}
-											if($status == 'HD'){
-												$total_half_day++;
-												echo '<i class="fas fa-star-half-alt hidden-print text-tertiary"></i><span class="visible-print">HD</span>';
-											}
-											echo '</span>';
 										} else {
 											if(in_array($date, $getHolidays)) {
 												echo '<i class="fas fa-hospital-symbol text-tertiary"></i><span class="visible-print">H</span>';
-											} else {
-												if(in_array($date, $weekends)) {
-													$total_weekends++;
-													echo '<span class="text-success">W</span>';
-												}
+											} else if(in_array($date, $weekends)) {
+												$total_weekends++;
+												echo '<span class="text-success">W</span>';
+											} else if(!empty($leaveInfo)) {
+												$showLeave = true;
 											}
+										}
+
+										if ($showLeave) {
+											$total_leave++;
+											$leaveContent = translate('leave');
+											if (!empty($leaveInfo['category_name'])) {
+												$leaveContent .= ' (' . $leaveInfo['category_name'] . ')';
+											}
+											if (!empty($remark)) {
+												$leaveContent .= ' - ' . $remark;
+											} elseif (!empty($leaveInfo['reason'])) {
+												$leaveContent .= ' - ' . $leaveInfo['reason'];
+											}
+											echo '<span data-toggle="popover" data-placement="top" data-trigger="hover" data-content="' . html_escape($leaveContent) . '">';
+											echo '<i class="far fa-calendar-minus hidden-print text-warning"></i><span class="visible-print">LV</span>';
+											echo '</span>';
 										}
 										echo '</td>';
 									}
@@ -171,10 +204,11 @@ $date = date('Y-m-d', strtotime($year . '-' . $month . '-' . $i));
 								<td class="center"><?=$total_weekends?></td>
 								<td class="center"><?=$total_present?></td>
 								<td class="center"><?=$total_absent?></td>
+								<td class="center"><?=$total_leave?></td>
 								<td class="center"><?=$total_late?></td>
 								<td class="center"><?=$total_half_day?></td>
-								<?php endforeach; ?>
 							</tr>
+							<?php endforeach; ?>
 						</tbody>
 					</table>
 				</div>
