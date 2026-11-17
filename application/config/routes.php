@@ -136,6 +136,7 @@ $route['classes'] = 'classes/index';
 $route['student_promotion'] = 'student_promotion/index';
 $route['live_class'] = 'live_class/index';
 $route['exam'] = 'exam/index';
+$route['weighted_exam'] = 'weighted_exam/index';
 $route['profile'] = 'profile/index';
 $route['sections'] = 'sections/index';
 $route['subscription_review/(:num)'] = 'saas_website/purchase_complete/$1';

@@ -4,15 +4,16 @@ require_once APPPATH . '/third_party/mpdf/autoload.php';
 class Html2pdf
 {
 	public $mpdf;
-    public function __construct()
+    public function __construct($config = array())
     {
-       $this->mpdf = new \Mpdf\Mpdf([
+       $defaults = [
          'mode' => 'utf-8',
          'margin_left' => 2,
          'margin_right' => 2,
          'margin_top' => 2,
          'margin_bottom' => 2,
          'format' => 'A4'
-      ]);
+       ];
+       $this->mpdf = new \Mpdf\Mpdf(array_merge($defaults, is_array($config) ? $config : array()));
     }
 }

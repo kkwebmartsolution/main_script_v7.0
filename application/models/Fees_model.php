@@ -17,6 +17,39 @@ class Fees_model extends MY_Model
         $this->load->model('sms_model');
     }
 
+    public function copyGroup($group)
+    {
+        $this->db->trans_begin();
+        $details = $this->db->where('fee_groups_id', $group['id'])->get('fee_groups_details')->result_array();
+        $saved = $this->db->insert('fee_groups', array(
+            'name' => $group['name'] . ' (Copy)',
+            'description' => $group['description'],
+            'branch_id' => $group['branch_id'],
+            'session_id' => $group['session_id'],
+            'system' => 0,
+        ));
+        $groupID = $this->db->insert_id();
+        if ($saved) {
+            foreach ($details as $detail) {
+                $saved = $this->db->insert('fee_groups_details', array(
+                    'fee_groups_id' => $groupID,
+                    'fee_type_id' => $detail['fee_type_id'],
+                    'due_date' => $detail['due_date'],
+                    'amount' => $detail['amount'],
+                ));
+                if (!$saved) {
+                    break;
+                }
+            }
+        }
+        if (!$saved || $this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return false;
+        }
+        $this->db->trans_commit();
+        return $groupID;
+    }
+
     public function getPreviousSessionBalance($enrollID = '', $session_id = '', $with_fine = 0)
     {
         $total_balance = 0;

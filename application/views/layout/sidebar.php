@@ -1252,6 +1252,35 @@
                         </li>
                     <?php } ?>
                     <?php
+                    if (
+                        get_permission('weighted_exam_setup', 'is_view') ||
+                        get_permission('weighted_exam_subjects', 'is_view') ||
+                        get_permission('weighted_exam_schedule', 'is_view') ||
+                        get_permission('weighted_exam_marks', 'is_view') ||
+                        get_permission('weighted_exam_overview', 'is_view') ||
+                        get_permission('weighted_exam_processing', 'is_view') ||
+                        get_permission('weighted_exam_individual_results', 'is_view') ||
+                        get_permission('weighted_exam_marksheet', 'is_view') ||
+                        get_permission('weighted_exam_reports', 'is_view') ||
+                        get_permission('weighted_exam_grades', 'is_view')
+                    ) { ?>
+                        <li class="nav-parent <?php if ($main_menu == 'weighted_exam') echo 'nav-expanded nav-active'; ?>">
+                            <a><i class="fas fa-balance-scale"></i><span>Weighted Based Exam</span></a>
+                            <ul class="nav nav-children">
+                                <?php if (get_permission('weighted_exam_setup', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/setup'?'nav-active':''?>"><a href="<?=base_url('weighted_exam')?>"><span><i class="fas fa-caret-right"></i> Exam Setup</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_subjects', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/subjects'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/subjects')?>"><span><i class="fas fa-caret-right"></i> Exam Subjects</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_schedule', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/schedule'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/schedule')?>"><span><i class="fas fa-caret-right"></i> Exam Schedule</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_marks', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/marks'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/marks')?>"><span><i class="fas fa-caret-right"></i> Marks Entry</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_overview', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/overview'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/overview')?>"><span><i class="fas fa-caret-right"></i> Marks Overview</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_processing', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/processing'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/processing')?>"><span><i class="fas fa-caret-right"></i> Result Processing</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_individual_results', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/individual_results'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/individual_results')?>"><span><i class="fas fa-caret-right"></i> Individual Exam Results</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_marksheet', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/marksheet'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/marksheet')?>"><span><i class="fas fa-caret-right"></i> Generate Marksheet</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_reports', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/reports'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/reports')?>"><span><i class="fas fa-caret-right"></i> Exam Reports</span></a></li><?php } ?>
+                                <?php if (get_permission('weighted_exam_grades', 'is_view')) { ?><li class="<?=$sub_page=='weighted_exam/grades'?'nav-active':''?>"><a href="<?=base_url('weighted_exam/grades')?>"><span><i class="fas fa-caret-right"></i> Grade Rules</span></a></li><?php } ?>
+                            </ul>
+                        </li>
+                    <?php } ?>
+                    <?php
                     if (moduleIsEnabled('online_exam')) {
                         if (
                             get_permission('online_exam', 'is_view') ||

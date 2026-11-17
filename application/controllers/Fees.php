@@ -232,6 +232,39 @@ class Fees extends Admin_Controller
         $this->load->view('layout/index', $this->data);
     }
 
+    public function group_copy($id = '')
+    {
+        if (!get_permission('fees_group', 'is_view') || !get_permission('fees_group', 'is_add')) {
+            access_denied();
+            return;
+        }
+        if ($this->input->method() !== 'post') {
+            show_error('Method not allowed.', 405);
+            return;
+        }
+        if (!ctype_digit((string) $id) || (int) $id < 1) {
+            show_404();
+            return;
+        }
+        $this->db->where(array('id' => $id, 'session_id' => get_session_id(), 'system' => 0));
+        if (!is_superadmin_loggedin()) {
+            $this->db->where('branch_id', get_loggedin_branch_id());
+        }
+        $group = $this->db->get('fee_groups')->row_array();
+        if (empty($group)) {
+            show_404();
+            return;
+        }
+
+        $groupID = $this->fees_model->copyGroup($group);
+        if ($groupID === false) {
+            set_alert('error', 'Unable to copy the fees group. Please try again.');
+        } else {
+            set_alert('success', 'Fees group copied successfully.');
+        }
+        redirect(base_url('fees/group'));
+    }
+
     public function group_edit($id = '')
     {
         if (!get_permission('fees_group', 'is_edit')) {

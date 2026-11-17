@@ -47,6 +47,13 @@
 								?></td>
 								<td><?php echo $row['description']; ?></td>
 								<td>
+									<?php if (get_permission('fees_group', 'is_add')): ?>
+										<?php echo form_open('fees/group_copy/' . $row['id'], array('style' => 'display:inline-block', 'onsubmit' => 'this.querySelector("button").disabled = true;')); ?>
+											<button type="submit" class="btn btn-default btn-sm" title="Copy fees group">
+												<i class="far fa-copy" aria-hidden="true"></i> Copy
+											</button>
+										<?php echo form_close(); ?>
+									<?php endif; ?>
 									<?php if (get_permission('fees_group', 'is_edit')): ?>
 										<a href="<?php echo base_url('fees/group_edit/' . $row['id']); ?>" class="btn btn-circle btn-default icon"
 										data-toggle="tooltip" data-original-title="<?php echo translate('edit'); ?>"> 
