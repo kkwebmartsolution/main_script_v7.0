@@ -121,31 +121,86 @@ class Subject extends Admin_Controller
     {
         if ($_POST) {
             if (get_permission('subject_class_assign', 'is_add')) {
+                foreach (array('class_ids', 'subjects') as $field) {
+                    $values = $this->input->post($field);
+                    if (!is_array($values) || empty($values) || count(array_filter($values, function ($value) {
+                        return is_scalar($value) && ctype_digit((string) $value) && (int) $value > 0;
+                    })) !== count($values)) {
+                        echo json_encode(array('status' => 'fail', 'url' => '', 'error' => array($field . '[]' => 'Please select at least one valid item.')));
+                        return;
+                    }
+                }
+                if (!is_string($this->input->post('section_id'))) {
+                    echo json_encode(array('status' => 'fail', 'url' => '', 'error' => array('section_id' => 'Please select a section.')));
+                    return;
+                }
                 if (is_superadmin_loggedin()) {
                     $this->form_validation->set_rules('branch_id', translate('branch'), 'required');
                 }
-                $this->form_validation->set_rules('class_id', translate('class'), 'trim|required|callback_unique_subject_assign');
+                $this->form_validation->set_rules('class_ids[]', translate('class'), 'required|integer');
                 $this->form_validation->set_rules('section_id', translate('section'), 'trim|required');
                 $this->form_validation->set_rules('subjects[]', translate('subject'), 'trim|required');
                 if ($this->form_validation->run() !== false) {
                     $branchID = $this->application_model->get_branch_id();
-                    $arraySubject = array(
-                        'class_id' => $this->input->post('class_id'),
-                        'section_id' => $this->input->post('section_id'),
-                        'session_id' => get_session_id(),
-                        'branch_id' => $branchID,
-                    );
-
-                    // get class teacher details
-                    $get_teacher = $this->subject_model->get('teacher_allocation', $arraySubject, true);
+                    $classIDs = $this->input->post('class_ids');
                     $subjects = $this->input->post('subjects');
-                    foreach ($subjects as $subject) {
-                        $arraySubject['subject_id'] = $subject;
-                        $query = $this->db->get_where("subject_assign", $arraySubject);
-                        if ($query->num_rows() == 0) {
-                            $arraySubject['teacher_id'] = empty($get_teacher) ? 0 : $get_teacher['teacher_id'];
-                            $this->db->insert('subject_assign', $arraySubject);
+                    $sectionID = $this->input->post('section_id');
+                    $error = array();
+                    $targets = array();
+                    if (!is_array($classIDs) || !is_array($subjects)) {
+                        $error['class_ids[]'] = 'Please select classes and subjects.';
+                    } else {
+                        $classIDs = array_unique($classIDs);
+                        $allowedClasses = $this->app_lib->getClass($branchID, false);
+                        foreach ($classIDs as $classID) {
+                            if (!isset($allowedClasses[$classID]) || !$this->db->get_where('class', array('id' => $classID, 'branch_id' => $branchID))->num_rows()) {
+                                $error['class_ids[]'] = 'Please select valid classes for this branch.';
+                                break;
+                            }
+                            $sections = $this->app_lib->getSections($classID);
+                            unset($sections[''], $sections['all']);
+                            if (empty($sections)) {
+                                $error['class_ids[]'] = 'Every selected class must have an available section.';
+                                break;
+                            }
+                            if (count($classIDs) === 1 && $sectionID !== 'all') {
+                                if (!isset($sections[$sectionID])) {
+                                    $error['section_id'] = 'Please select a valid section for this class.';
+                                    break;
+                                }
+                                $sections = array($sectionID => $sections[$sectionID]);
+                            }
+                            foreach ($sections as $id => $name) {
+                                $targets[] = array('class_id' => $classID, 'section_id' => $id,
+                                    'session_id' => get_session_id(), 'branch_id' => $branchID);
+                            }
                         }
+                        foreach ($subjects as $subject) {
+                            if (!is_scalar($subject) || !ctype_digit((string) $subject) || !$this->db->get_where('subject', array('id' => $subject, 'branch_id' => $branchID))->num_rows()) {
+                                $error['subjects[]'] = 'Please select valid subjects for this branch.';
+                                break;
+                            }
+                        }
+                    }
+                    if (!empty($error)) {
+                        echo json_encode(array('status' => 'fail', 'url' => '', 'error' => $error));
+                        return;
+                    }
+                    $this->db->trans_start();
+                    foreach ($targets as $target) {
+                        $teacher = $this->subject_model->get('teacher_allocation', $target, true);
+                        foreach (array_unique($subjects) as $subject) {
+                            $assignment = array_merge($target, array('subject_id' => $subject));
+                            if (!$this->db->get_where('subject_assign', $assignment)->num_rows()) {
+                                $assignment['teacher_id'] = empty($teacher) ? 0 : $teacher['teacher_id'];
+                                $this->db->insert('subject_assign', $assignment);
+                            }
+                        }
+                    }
+                    $this->db->trans_complete();
+                    if ($this->db->trans_status() === false) {
+                        echo json_encode(array('status' => 'fail', 'url' => '', 'error' => array('subjects[]' => 'Unable to save assignments. Please try again.')));
+                        return;
                     }
                     set_alert('success', translate('information_has_been_saved_successfully'));
                     $url = base_url('subject/class_assign');

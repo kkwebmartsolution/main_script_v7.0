@@ -75,9 +75,10 @@
 						<label class="col-md-3 control-label"><?=translate('class')?> <span class="required">*</span></label>
 						<div class="col-md-6">
 							<?php
-								$arrayClass = $this->app_lib->getClass($branch_id);
-								echo form_dropdown("class_id", $arrayClass, set_value('class_id'), "class='form-control' id='class_id' onchange='getSectionByClass(this.value,0)'
-								data-plugin-selectTwo data-width='100%' data-minimum-results-for-search='Infinity' ");
+								$arrayClass = $this->app_lib->getClass($branch_id, false);
+								unset($arrayClass['']);
+								echo form_dropdown("class_ids[]", $arrayClass, array(), "class='form-control' id='class_id' multiple
+								data-plugin-selectTwo data-width='100%' data-placeholder='Select classes' ");
 							?>
 							<span class="error"></span>
 						</div>
@@ -86,11 +87,12 @@
 						<label class="col-md-3 control-label"><?=translate('section')?> <span class="required">*</span></label>
 						<div class="col-md-6">
 							<?php
-								$arraySection = $this->app_lib->getSections(set_value('class_id'));
+								$arraySection = array('' => translate('select_class_first'));
 								echo form_dropdown("section_id", $arraySection, set_value('section_id'), "class='form-control' id='section_id' 
 								data-plugin-selectTwo data-width='100%' data-minimum-results-for-search='Infinity' ");
 							?>
 							<span class="error"></span>
+							<p class="help-block">When multiple classes are selected, subjects will be assigned to all available sections in each class. Existing assignments will be kept.</p>
 						</div>
 					</div>
 					<div class="form-group">
@@ -162,9 +164,40 @@
 
 <script type="text/javascript">
 	$(document).ready(function () {
+		var sectionRequest;
+		$('#class_id').on('change', function () {
+			if (sectionRequest) sectionRequest.abort();
+			var classes = $(this).val() || [];
+			var section = $('#section_id');
+			section.empty();
+			if (classes.length > 1) {
+				section.append(new Option(<?=json_encode(translate('all_sections'))?>, 'all')).trigger('change');
+			} else if (classes.length === 1) {
+				section.append(new Option(<?=json_encode(translate('select'))?>, '')).trigger('change');
+				sectionRequest = $.ajax({
+					url: "<?=base_url('ajax/getSectionByClass')?>",
+					type: 'POST',
+					data: {class_id: classes[0], all: 1},
+					success: function (data) { section.html(data).trigger('change'); }
+				});
+			} else {
+				section.append(new Option(<?=json_encode(translate('select_class_first'))?>, '')).trigger('change');
+			}
+		});
 		$(document).on('change', '#branch_id', function() {
 			var branchID = $(this).val();
-			getClassByBranch(branchID);
+			$('#class_id').empty().trigger('change');
+			$('#subject_holder').empty().trigger('change');
+			$.ajax({
+				url: "<?=base_url('ajax/getClassByBranch')?>",
+				type: 'POST',
+				data: {branch_id: branchID},
+				success: function (data) {
+					if ($('#branch_id').val() !== branchID) return;
+					$('#class_id').html(data).find('option[value=""]').remove();
+					$('#class_id').val([]).trigger('change');
+				}
+			});
 
 			$.ajax({
 				url: "<?=base_url('ajax/getDataByBranch')?>",
@@ -174,7 +207,9 @@
 					branch_id: branchID
 				},
 				success: function (data) {
-					$('#subject_holder').html(data);
+					if ($('#branch_id').val() !== branchID) return;
+					$('#subject_holder').html(data).find('option[value=""]').remove();
+					$('#subject_holder').val([]).trigger('change');
 				}
 			});
 		});
