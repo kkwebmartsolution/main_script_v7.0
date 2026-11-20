@@ -72,9 +72,28 @@ class Weighted_exam extends Admin_Controller
     public function schedule()
     {
         $this->allow('weighted_exam_schedule');$examId=(int)$this->input->post_get('exam_id');$classId=(int)$this->input->post_get('class_id');$sectionId=(int)$this->input->post_get('section_id');
-        if($this->input->post('save_schedule')){$this->allow('weighted_exam_schedule','is_edit');try{$this->weighted_exam_model->saveSchedule($examId,$classId,$sectionId,(array)$this->input->post('schedule'));set_alert('success','Examination schedule saved successfully.');redirect('weighted_exam/schedule?'.http_build_query(['branch_id'=>$this->weighted_exam_model->branchId(),'exam_id'=>$examId,'class_id'=>$classId,'section_id'=>$sectionId]));}catch(Exception $e){set_alert('error',$e->getMessage());}}
+        $component = (string)$this->input->post_get('component');
+        if (!in_array($component, ['unit1', 'unit2', 'half_yearly', 'annual'], true)) $component = '';
+        if ($this->input->post('save_schedule')) {
+            $this->allow('weighted_exam_schedule', 'is_edit');
+            try {
+                if ($component === '') throw new RuntimeException('Select an examination component first.');
+                $rows = [];
+                foreach ((array)$this->input->post('schedule') as $subjectId => $components) {
+                    if (is_array($components) && isset($components[$component]) && is_array($components[$component])) {
+                        $rows[$subjectId] = [$component => $components[$component]];
+                    }
+                }
+                $this->weighted_exam_model->saveSchedule($examId, $classId, $sectionId, $rows);
+                set_alert('success', 'Examination schedule saved successfully.');
+                redirect('weighted_exam/schedule?' . http_build_query(['branch_id'=>$this->weighted_exam_model->branchId(),'exam_id'=>$examId,'class_id'=>$classId,'section_id'=>$sectionId,'component'=>$component]));
+            } catch (Exception $e) { set_alert('error', $e->getMessage()); }
+        }
         $subjects=($examId&&$classId)?$this->weighted_exam_model->configuredSubjects($examId,$classId):[];$schedule=($examId&&$classId&&$sectionId)?$this->weighted_exam_model->schedules($examId,$classId,$sectionId):[];
-        $this->baseData('weighted_exam/schedule','Weighted Exam Schedule');$this->data += compact('examId','classId','sectionId','subjects','schedule');$this->load->view('layout/index',$this->data);
+        $subjects = array_values(array_filter($subjects, function ($subject) use ($component) {
+            return $component !== '' && !empty($subject['components'][$component]['enabled']);
+        }));
+        $this->baseData('weighted_exam/schedule','Weighted Exam Schedule');$this->data += compact('examId','classId','sectionId','component','subjects','schedule');$this->load->view('layout/index',$this->data);
     }
 
     public function marks()

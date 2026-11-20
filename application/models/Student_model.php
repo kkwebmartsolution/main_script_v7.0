@@ -23,6 +23,44 @@ class Student_model extends MY_Model
         return date("Y-m-d", strtotime($date_str));
     }
 
+    // Called within the student profile transaction, using the authorized student record.
+    public function saveProfileGuardian(array $student, array $data)
+    {
+        $where = ['id' => (int)$student['parent_id'], 'branch_id' => (int)$student['branch_id']];
+        $existing = $this->db->where($where)->get('parent')->row_array();
+        if (!get_permission('parent', $existing ? 'is_edit' : 'is_add')) {
+            access_denied();
+            return;
+        }
+        $fields = ['name' => 'grd_name', 'relation' => 'grd_relation', 'father_name' => 'father_name',
+            'mother_name' => 'mother_name', 'occupation' => 'grd_occupation', 'income' => 'grd_income',
+            'education' => 'grd_education', 'email' => 'grd_email', 'mobileno' => 'grd_mobileno',
+            'address' => 'grd_address', 'city' => 'grd_city', 'state' => 'grd_state'];
+        $parent = [];
+        foreach ($fields as $column => $field) {
+            $parent[$column] = isset($data[$field]) ? trim((string)$data[$field]) : '';
+        }
+        if ($parent['name'] === '') $parent['name'] = $parent['father_name'];
+        if (!empty($_FILES['guardian_photo']['name'])) {
+            $parent['photo'] = $this->uploadImage('parent', 'guardian_photo');
+        }
+        if ($existing) {
+            $this->db->where($where)->update('parent', $parent);
+            return (int)$existing['id'];
+        }
+        $parent['branch_id'] = (int)$student['branch_id'];
+        if (!isset($parent['photo'])) $parent['photo'] = 'defualt.png';
+        $this->db->insert('parent', $parent);
+        $parentId = (int)$this->db->insert_id();
+        // Keep new guardians compatible with the parent profile and authentication tools.
+        $this->db->insert('login_credential', [
+            'user_id' => $parentId, 'role' => 6, 'active' => 1,
+            'username' => 'guardian_' . $parentId . '_' . bin2hex(random_bytes(4)),
+            'password' => $this->app_lib->pass_hashed(bin2hex(random_bytes(16))),
+        ]);
+        return $parentId;
+    }
+
     // moderator student all information
     public function save($data = array(), $getBranch = array())
     {
@@ -92,7 +130,7 @@ class Student_model extends MY_Model
                 // add new guardian all information in db
                 if (!empty($data['grd_name']) || !empty($data['father_name'])) {
                     $arrayParent = array(
-                        'name' => $this->input->post('grd_name'),
+                        'name' => trim((string)$this->input->post('grd_name')) !== '' ? $this->input->post('grd_name') : $this->input->post('father_name'),
                         'relation' => $this->input->post('grd_relation'),
                         'father_name' => $this->input->post('father_name'),
                         'mother_name' => $this->input->post('mother_name'),

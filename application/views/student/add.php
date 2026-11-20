@@ -439,6 +439,14 @@ endif;
 				$guardian_email = $this->student_fields_model->getStatus('guardian_email', $branch_id);
 				$guardian_address = $this->student_fields_model->getStatus('guardian_address', $branch_id);
 				$guardian_photo = $this->student_fields_model->getStatus('guardian_photo', $branch_id);
+                // Guardian details require only father name and phone, regardless of field settings.
+                foreach (['guardian_name', 'guardian_relation', 'mother_name', 'guardian_occupation',
+                    'guardian_income', 'guardian_education', 'guardian_city', 'guardian_state',
+                    'guardian_email', 'guardian_address', 'guardian_photo'] as $guardianField) {
+                    ${$guardianField}['required'] = 0;
+                }
+                $father_name = ['status' => 1, 'required' => 1];
+                $guardian_mobile_no = ['status' => 1, 'required' => 1];
 				?>
 				<!--guardian details-->
 				<div class="headers-line  mt-md">
@@ -594,7 +602,7 @@ endif;
 						<div class="col-md-12 mb-sm">
 							<div class="form-group">
 								<label class="control-label"><?=translate('address')?><?php echo $guardian_address['required'] == 1 ? ' <span class="required">*</span>' : ''; ?></label>
-								<textarea name="grd_address" rows="2" class="form-control" aria-required="true"><?=set_value('grd_address')?></textarea>
+								<textarea name="grd_address" rows="2" class="form-control"><?=set_value('grd_address')?></textarea>
 								<span class="error"></span>
 							</div>
 						</div>

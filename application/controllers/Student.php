@@ -141,6 +141,20 @@ class Student extends Admin_Controller
         }
     }
 
+    protected function guardian_details_validation()
+    {
+        $this->form_validation->set_rules('father_name', translate('father_name'), 'trim|required');
+        $this->form_validation->set_rules('grd_mobileno', translate('mobile_no'), 'trim|required');
+        foreach (['grd_name' => 'name', 'grd_relation' => 'relation', 'mother_name' => 'mother_name',
+            'grd_occupation' => 'occupation', 'grd_education' => 'education', 'grd_address' => 'address',
+            'grd_city' => 'city', 'grd_state' => 'state'] as $field => $label) {
+            $this->form_validation->set_rules($field, translate($label), 'trim');
+        }
+        $this->form_validation->set_rules('grd_income', translate('income'), 'trim|numeric');
+        $this->form_validation->set_rules('grd_email', translate('email'), 'trim|valid_email');
+        $this->form_validation->set_rules('guardian_photo', translate('guardian_picture'), 'callback_photoHandleUpload[guardian_photo]');
+    }
+
     /* student admission information are prepared and stored in the database here */
     public function add()
     {
@@ -208,47 +222,7 @@ class Student extends Admin_Controller
                     }
                 }
 
-                if (isset($validArr['guardian_name'])) {
-                    $this->form_validation->set_rules('grd_name', translate('name'), 'trim|required');
-                }
-                if (isset($validArr['guardian_relation'])) {
-                    $this->form_validation->set_rules('grd_relation', translate('relation'), 'trim|required');
-                }
-                if (isset($validArr['father_name'])) {
-                    $this->form_validation->set_rules('father_name', translate('father_name'), 'trim|required');
-                }
-                if (isset($validArr['mother_name'])) {
-                    $this->form_validation->set_rules('mother_name', translate('mother_name'), 'trim|required');
-                }
-                if (isset($validArr['guardian_occupation'])) {
-                    $this->form_validation->set_rules('grd_occupation', translate('occupation'), 'trim');
-                }
-                if (isset($validArr['guardian_income'])) {
-                    $this->form_validation->set_rules('grd_income', translate('income'), 'trim|numeric');
-                }
-                if (isset($validArr['guardian_education'])) {
-                    $this->form_validation->set_rules('grd_education', translate('education'), 'trim');
-                }
-                if (isset($validArr['guardian_email'])) {
-                    $this->form_validation->set_rules('grd_email', translate('email'), 'trim|valid_email');
-                }
-                if (isset($validArr['guardian_mobile_no'])) {
-                    $this->form_validation->set_rules('grd_mobileno', translate('mobile_no'), 'trim|required|numeric');
-                }
-                if (isset($validArr['guardian_address'])) {
-                    $this->form_validation->set_rules('grd_address', translate('address'), 'trim|required');
-                }
-                if (isset($validArr['guardian_photo'])) {
-                    if (isset($_FILES["guardian_photo"]) && empty($_FILES["guardian_photo"]['name'])) {
-                        $this->form_validation->set_rules('guardian_photo', translate('guardian_picture'), 'required');
-                    }
-                }
-                if (isset($validArr['guardian_city'])) {
-                    $this->form_validation->set_rules('grd_city', translate('city'), 'trim|required');
-                }
-                if (isset($validArr['guardian_state'])) {
-                    $this->form_validation->set_rules('grd_state', translate('state'), 'trim|required');
-                }
+                $this->guardian_details_validation();
 
                 if ($getBranch['grd_generate'] == 0) {
                     if (isset($validArr['grd_username'])) {
@@ -601,6 +575,10 @@ class Student extends Admin_Controller
         $this->load->model('fees_model');
         $this->load->model('exam_model');
         $getStudent = $this->student_model->getSingleStudent($id, true);
+        $guardian = $this->db->where(['id' => (int)$getStudent['parent_id'], 'branch_id' => (int)$getStudent['branch_id']])->get('parent')->row_array();
+        $canManageGuardian = get_permission('parent', $guardian ? 'is_edit' : 'is_add');
+        $this->data['can_manage_guardian'] = $canManageGuardian;
+
         if (isset($_POST['update'])) {
             $this->session->set_flashdata('profile_tab', 1);
             $this->data['branch_id'] = $this->application_model->get_branch_id();
@@ -615,9 +593,16 @@ class Student extends Admin_Controller
                 $this->form_validation->set_rules('stoppage_point_id', translate('pickup_point'), 'required');
             }
 
-            $this->form_validation->set_rules('parent_id', translate('guardian'), 'required');
+            if ($canManageGuardian) $this->guardian_details_validation();
             if ($this->form_validation->run() == true) {
                 $post = $this->input->post();
+                // Use the authorized student's stored relationship, never a submitted parent ID.
+                $post['student_id'] = $getStudent['id'];
+                $post['parent_id'] = $getStudent['parent_id'];
+                $this->db->trans_begin();
+                if ($canManageGuardian) {
+                    $post['parent_id'] = $this->student_model->saveProfileGuardian($getStudent, $post);
+                }
                 //save all student information in the database file
                 $studentID = $this->student_model->save($post);
                 //save student enroll information in the database file
@@ -653,6 +638,12 @@ class Student extends Admin_Controller
                 if (!empty($customField)) {
                     saveCustomFields($customField, $id);
                 }
+                if ($this->db->trans_status() === false) {
+                    $this->db->trans_rollback();
+                    show_error('Unable to save student and guardian details.', 500);
+                    return;
+                }
+                $this->db->trans_commit();
                 set_alert('success', translate('information_has_been_updated_successfully'));
                 redirect(base_url('student/profile/' . $id));
             }
