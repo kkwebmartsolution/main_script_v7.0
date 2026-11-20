@@ -43,7 +43,7 @@
 					</a>
 				</h4>
 			</div>
-			<div id="profile" class="accordion-body collapse <?=($this->session->flashdata('profile_tab') ? 'in' : ''); ?>">
+			<div id="profile" class="accordion-body collapse <?=(($this->session->flashdata('profile_tab') || $this->input->get('edit') === '1') ? 'in' : ''); ?>">
 				<?php echo form_open_multipart($this->uri->uri_string()); ?>
 				<input type="hidden" name="parent_id" value="<?php echo $parent['id']; ?>" id="parent_id">
 				<div class="panel-body">

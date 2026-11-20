@@ -6,8 +6,27 @@
  <?php if(is_superadmin_loggedin()):?><div class="form-group"><label>Branch <span class="required">*</span></label><select name="branch_id" id="branch_id" class="form-control" data-plugin-selectTwo required onchange="if(this.value)window.location='<?=base_url('weighted_exam')?>?branch_id='+this.value"><option value="">Select</option><?php foreach($branches as $b):?><option value="<?=$b['id']?>" <?=$branch_id==$b['id']?'selected':''?>><?=html_escape($b['name'])?></option><?php endforeach?></select></div><?php endif?>
  <div class="form-group"><label>Examination Name <span class="required">*</span></label><input name="name" class="form-control" required maxlength="255" value="<?=html_escape(set_value('name',$edit?$edit['name']:''))?>"><?=form_error('name','<span class="error">','</span>')?></div>
  <div class="form-group"><label>Academic Session <span class="required">*</span></label><select name="session_id" class="form-control" data-plugin-selectTwo required><option value="">Select</option><?php foreach($sessions as $s):?><option value="<?=$s['id']?>" <?=set_select('session_id',$s['id'],$edit&&$edit['session_id']==$s['id'])?>><?=html_escape($s['school_year'])?></option><?php endforeach?></select></div>
- <div class="form-group"><label>Classes <span class="required">*</span></label><select name="class_ids[]" class="form-control" data-plugin-selectTwo multiple required><?php foreach($classes as $c):?><option value="<?=$c['id']?>" <?=in_array($c['id'],$selectedClasses)?'selected':''?>><?=html_escape($c['name'])?></option><?php endforeach?></select><small>Selected sections below are applied where allocated to each class.</small></div>
+ <div class="form-group"><label for="weighted-exam-classes">Classes <span class="required">*</span></label><div class="checkbox"><label><input type="checkbox" id="weighted-exam-all-classes"> Select All Classes</label></div><select id="weighted-exam-classes" name="class_ids[]" class="form-control" data-plugin-selectTwo multiple required><?php foreach($classes as $c):?><option value="<?=$c['id']?>" <?=in_array($c['id'],$selectedClasses)?'selected':''?>><?=html_escape($c['name'])?></option><?php endforeach?></select><small>Selected sections below are applied where allocated to each class.</small></div>
  <div class="form-group"><label>Sections (leave empty for all allocated sections)</label><select name="section_ids[]" class="form-control" data-plugin-selectTwo multiple><?php foreach($sections as $s):?><option value="<?=$s['id']?>" <?=in_array($s['id'],$selectedSections)?'selected':''?>><?=html_escape($s['name'])?></option><?php endforeach?></select></div>
+ <script>
+ $(function () {
+     var $classes = $('#weighted-exam-classes');
+     var $allClasses = $('#weighted-exam-all-classes');
+     function syncAllClasses() {
+         var total = $classes.find('option').length;
+         var selected = ($classes.val() || []).length;
+         $allClasses.prop('checked', total > 0 && selected === total)
+             .prop('indeterminate', selected > 0 && selected < total)
+             .prop('disabled', total === 0);
+     }
+     $allClasses.on('change', function () {
+         $classes.find('option').prop('selected', this.checked);
+         $classes.trigger('change');
+     });
+     $classes.on('change', syncAllClasses);
+     syncAllClasses();
+ });
+ </script>
  <div class="form-group"><label>Description</label><textarea name="description" class="form-control" rows="3"><?=html_escape(set_value('description',$edit?$edit['description']:''))?></textarea></div>
  <div class="row"><div class="col-sm-6"><div class="form-group"><label>Publication Date</label><input type="date" name="publication_date" class="form-control" value="<?=html_escape($edit?$edit['publication_date']:'')?>"></div></div><div class="col-sm-6"><div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft">Draft</option><option value="active" <?=$edit&&$edit['status']==='active'?'selected':''?>>Active</option></select></div></div></div>
  <div class="form-group"><label>Absent Mark Policy</label><select name="absence_policy" class="form-control"><option value="incomplete">Keep result incomplete</option><option value="zero" <?=$edit&&$edit['absence_policy']==='zero'?'selected':''?>>Calculate absent as zero</option></select></div>

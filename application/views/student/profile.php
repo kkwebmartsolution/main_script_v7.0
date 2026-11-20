@@ -543,6 +543,23 @@ if ($student_photo['status']) {
 										data-plugin-selectTwo ");
 									?>
 									<span class="error"><?=form_error('parent_id')?></span>
+									<?php if (get_permission('parent', 'is_edit')): ?>
+									<a id="edit-selected-parent" class="btn btn-default mt-sm" target="_blank" rel="noopener" style="display:none"><i class="fas fa-pen"></i> <?=translate('edit') . ' ' . translate('parent')?> <i class="fas fa-external-link-alt"></i></a>
+									<script>
+									$(function () {
+										var $parent = $('#parent_id'), $editParent = $('#edit-selected-parent');
+										function updateParentLink() {
+											var id = $parent.val();
+											var valid = /^[1-9][0-9]*$/.test(id || '');
+											$editParent.toggle(valid);
+											if (valid) $editParent.attr('href', <?=json_encode(base_url('parents/profile/'))?> + id + '?edit=1#profile');
+											else $editParent.removeAttr('href');
+										}
+										$parent.on('change', updateParentLink);
+										updateParentLink();
+									});
+									</script>
+									<?php endif; ?>
 								</div>
 							</div>
 						</div>
@@ -1186,6 +1203,9 @@ if (empty($empty_table)) {
 				</div>
 				<div id="parent" class="accordion-body collapse">
 					<div class="panel-body">
+						<?php if (!empty($getParent['id']) && get_permission('parent', 'is_edit')): ?>
+						<a class="btn btn-default" href="<?=base_url('parents/profile/' . (int)$getParent['id'] . '?edit=1#profile')?>" target="_blank" rel="noopener"><i class="fas fa-pen"></i> <?=translate('edit') . ' ' . translate('parent')?> <i class="fas fa-external-link-alt"></i></a>
+						<?php endif; ?>
 						<div class="table-responsive mt-md mb-md">
 							<table class="table table-striped table-bordered table-condensed mb-none">
 								<tbody>
