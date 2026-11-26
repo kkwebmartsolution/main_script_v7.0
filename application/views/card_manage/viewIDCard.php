@@ -1,5 +1,6 @@
 <style type="text/css">
 	.certificate{
+		box-sizing: border-box;
 	<?php if (empty($template['background'])) { ?>
 			background: #fff;
 	<?php } else { ?>
@@ -16,5 +17,11 @@
 	}
 </style>
 <div class="certificate">
-	<?=$template['content']?>
+	<?php
+    $watermark = '';
+    if (!empty($template['logo']) && is_file(FCPATH . 'uploads/certificate/' . basename($template['logo']))) {
+        $watermark = '<img alt="" aria-hidden="true" src="' . base_url('uploads/certificate/' . basename($template['logo'])) . '" style="display:block;width:100%;height:100%;object-fit:contain;">';
+    }
+    echo str_replace('{watermark}', $watermark, $template['content']);
+    ?>
 </div>

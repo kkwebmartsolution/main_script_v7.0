@@ -223,18 +223,28 @@ class Card_manage extends Admin_Controller
                 ajax_access_denied();
             }
 
-            //get all QR Code file
-            $files = glob('uploads/qr_code/*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    unlink($file); //delete file
-                }
-            }
-
             $this->data['user_type'] = $opt;
-            $this->data['user_array'] = $this->input->post('user_id');
+            $users = $this->input->post('user_id');
+            if (!is_array($users) || empty($users)) {
+                show_error('Please select at least one person to print.', 400);
+                return;
+            }
+            $this->data['user_array'] = array_values(array_unique(array_map('intval', $users)));
             $templateID = $this->input->post('templete_id');
             $this->data['template'] = $this->card_manage_model->get('card_templete', array('id' => $templateID), true);
+            $template = $this->data['template'];
+            if (empty($template) || (int) $template['card_type'] !== 1 || (int) $template['user_type'] !== (int) $opt
+                || (!is_superadmin_loggedin() && (int) $template['branch_id'] !== (int) get_loggedin_branch_id())) {
+                ajax_access_denied();
+                return;
+            }
+            foreach ($this->data['user_array'] as $userID) {
+                $person = $opt == 1 ? $this->card_manage_model->getStudent($userID) : $this->card_manage_model->getStaff($userID);
+                if (empty($person) || (int) $person['branch_id'] !== (int) $template['branch_id']) {
+                    show_error('Select people and a template from the same branch.', 400);
+                    return;
+                }
+            }
             $this->data['student_array'] = $this->input->post('student_id');
             $this->data['print_date'] = $this->input->post('print_date');
             $this->data['expiry_date'] = $this->input->post('expiry_date');

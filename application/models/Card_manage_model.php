@@ -146,6 +146,7 @@ class Card_manage_model extends MY_Model
             $arrayTags[] = '{caste}';
         }
         if ($roleID == 2) {
+            $arrayTags[] = '{staff_id}';
             $arrayTags[] = '{staff_photo}';
             $arrayTags[] = '{joining_date}';
             $arrayTags[] = '{designation}';
@@ -167,6 +168,9 @@ class Card_manage_model extends MY_Model
         $arrayTags[] = '{present_address}';
         $arrayTags[] = '{permanent_address}';
         $arrayTags[] = '{logo}';
+        if (!$admit_card) {
+            $arrayTags[] = '{watermark}';
+        }
         $arrayTags[] = '{signature}';
         $arrayTags[] = '{qr_code}';
         $arrayTags[] = '{institute_name}';
@@ -192,12 +196,20 @@ class Card_manage_model extends MY_Model
         } else if ($roleID == 2) {
             $userDetails = $this->getStaff($userID);
         }
+        $watermark = '';
+        if (!empty($templete['logo']) && is_file(FCPATH . 'uploads/certificate/' . basename($templete['logo']))) {
+            $watermark = '<img alt="" aria-hidden="true" src="' . base_url('uploads/certificate/' . basename($templete['logo'])) . '" style="display:block;width:100%;height:100%;object-fit:contain;">';
+        }
+        $body = str_replace('{watermark}', $watermark, $body);
         $arr = array('{', '}');
         foreach ($tags as $tag) {
+            if ($tag === '{watermark}') {
+                continue;
+            }
             $field = str_replace($arr, '', $tag);
             if ($roleID == 1) {
                 if ($field == 'student_photo') {
-                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-height:' . $photo_size . '">';
+                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-height:' . (int) $photo_size . 'px;max-width:100%;object-fit:contain;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
                     if (!empty($templete['logo'])) {
@@ -222,7 +234,7 @@ class Card_manage_model extends MY_Model
                         $params['size'] = 3;
                         $params['data'] = $qrData;
                         $qrCode = $this->ciqrcode->generate($params);
-                        $photo = '<img src="' . base_url($qrCode) . '">';
+                        $photo = '<img alt="Attendance QR" src="' . base_url($qrCode) . '" style="width:100%;height:100%;max-width:87px;max-height:87px;object-fit:contain;">';
                         $body = str_replace($tag, $photo, $body);
                     }
                 } else if ($field == 'present_address') {
@@ -234,13 +246,13 @@ class Card_manage_model extends MY_Model
                 } else if ($field == 'birthday') {
                     $body = str_replace($tag, _d($userDetails[$field]), $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, html_escape((string) ($userDetails[$field] ?? '')), $body);
                 }
             }
 
             if ($roleID == 2) {
                 if ($field == 'staff_photo') {
-                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" style="width: auto; max-height:' . $photo_size . '">';
+                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" style="width: auto; max-height:' . (int) $photo_size . 'px;max-width:100%;object-fit:contain;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
                     if (!empty($templete['logo'])) {
@@ -269,7 +281,7 @@ class Card_manage_model extends MY_Model
                         $params['size'] = 3;
                         $params['data'] = $qrData;
                         $qrCode = $this->ciqrcode->generate($params);
-                        $photo = '<img src="' . base_url($qrCode) . '">';
+                        $photo = '<img alt="Attendance QR" src="' . base_url($qrCode) . '" style="width:100%;height:100%;max-width:87px;max-height:87px;object-fit:contain;">';
                         $body = str_replace($tag, $photo, $body);
                     }
                 } else if ($field == 'gender') {
@@ -279,7 +291,7 @@ class Card_manage_model extends MY_Model
                 } else if ($field == 'birthday') {
                     $body = str_replace($tag, _d($userDetails[$field]), $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, html_escape((string) ($userDetails[$field] ?? '')), $body);
                 }
             }
         }

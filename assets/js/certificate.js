@@ -122,6 +122,10 @@ function certificate_printElem(elem, html = false)
        var oContent = elem; 
     }
     var frameDoc=window.open('', 'document-print');
+    if (!frameDoc) {
+        alert('Please allow pop-ups for this site to print cards.');
+        return false;
+    }
     frameDoc.document.open();
     //Create a new HTML document.
     frameDoc.document.write('<html><head><title></title>');
@@ -138,9 +142,6 @@ function certificate_printElem(elem, html = false)
     frameDoc.document.write('<\/script>');
     frameDoc.document.write('</body></html>');
     frameDoc.document.close();
-    setTimeout(function () {
-        frameDoc.close();      
-    }, 5000);
     return true;
 }
 

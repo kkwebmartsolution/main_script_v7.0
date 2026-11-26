@@ -1,8 +1,14 @@
 <style type="text/css">
 		@page {
-			margin: -2px;
+			size: A4;
+			margin: 8mm;
 		}
 		.certificate{
+			box-sizing: border-box;
+			width: <?=(float) $template['layout_width']?>mm;
+			height: <?=(float) $template['layout_height']?>mm;
+			break-inside: avoid;
+			page-break-inside: avoid;
 			<?php if (empty($template['background'])) { ?>
 				background: #fff;
 			<?php } else { ?>
@@ -13,7 +19,7 @@
 			padding: <?=$template['top_space'] . 'px ' . $template['right_space'] . 'px ' . $template['bottom_space'] . 'px ' . $template['left_space'] . 'px'?>;
 			font-family: Arial;
 			float: left;
-			margin: 12px;
+			margin: 3mm;
 		}
 		@media print {
 			.certificate {
